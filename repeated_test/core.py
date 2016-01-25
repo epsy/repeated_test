@@ -20,7 +20,7 @@ class FixturesDict(abc.MutableMapping):
     def __init__(self, *args, **kwargs):
         self.d = {}
         self.lines = {}
-        super().__init__(*args, **kwargs)
+        super(FixturesDict, self).__init__(*args, **kwargs)
 
     def __iter__(self):
         return iter(self.d)
@@ -42,11 +42,16 @@ class FixturesDict(abc.MutableMapping):
 
 
 class FixturesMeta(type):
-    def __prepare__(name, bases, **kwargs):
-        return FixturesDict()
+    @classmethod
+    def __prepare__(cls, name, bases, TestCase=None):
+        ret = FixturesDict()
+        if TestCase is not None:
+            ret['_TestCase'] = TestCase
+        return ret
 
-    def __new__(meta, name, bases, d):
+    def __new__(meta, name, bases, d, TestCase=None):
         container_loc = traceback.extract_stack(sys._getframe(1), 2)[0][:3]
+        TestCase = d.get('_TestCase', TestCase or unittest.TestCase)
         try: # py3
             orig = d.d
             lines = d.lines
@@ -60,9 +65,13 @@ class FixturesMeta(type):
                     value, lines.get(key), container_loc, name, key)
         bases = tuple(b for b in bases if b is not object)
         if '_test' in members:
-            bases = bases + (unittest.TestCase,)
+            bases = bases + (TestCase,)
         members['_repeated_test__lines'] = lines
         return super(FixturesMeta, meta).__new__(meta, name, bases, members)
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('TestCase', None)
+        super(FixturesMeta, self).__init__(*args, **kwargs)
 
     def with_test(cls, func):
         meta = type(cls)
@@ -75,6 +84,13 @@ class FixturesMeta(type):
 
 
 Fixtures = six.with_metaclass(FixturesMeta)
+
+
+def WithTestClass(cls):
+    class metaclass(type):
+        def __new__(cls_, name, this_bases, d):
+            return FixturesMeta(name, (), d, TestCase=cls)
+    return type.__new__(metaclass, "WithTestClass_"+cls.__name__, (), {})
 
 
 def _make_testfunc_runner(value, fake_loc,

@@ -1,7 +1,10 @@
 import sys
 import inspect
+import unittest
+
 import unittest2
-from repeated_test import Fixtures, tup
+
+from repeated_test import Fixtures, WithTestClass, tup, core
 
 
 class RepeatedTestTests(unittest2.TestCase):
@@ -49,6 +52,8 @@ class RepeatedTestTests(unittest2.TestCase):
             b = 6, 24, 4
             c = 31, 64, 33
             d = 2, 4, 2
+
+        self.assertFalse(issubclass(fixtures, unittest.TestCase))
 
         @fixtures.with_test
         def div_tests(self, r, a, b):
@@ -98,3 +103,33 @@ class RepeatedTestTests(unittest2.TestCase):
         def func():
             raise NotImplementedError
         self.assertEqual(tup(1, 2, 3)(func), (func, 1, 2, 3))
+
+    def test_unittest(self):
+        self.assertTrue(issubclass(self.sum_tests, unittest.TestCase))
+
+    def test_custom_testcase_cls_par(self):
+        class MyTestCase(object):
+            pass
+        m = WithTestClass(MyTestCase)
+        class fixtures(m):
+            _test = None
+        self.assertTrue(issubclass(fixtures, MyTestCase))
+
+    def test_custom_testcase_cls_body(self):
+        class MyTestCase(object):
+            pass
+        class fixtures(Fixtures):
+            _TestCase = MyTestCase
+            _test = None
+        self.assertTrue(issubclass(fixtures, MyTestCase))
+
+    def test_custom_testcase_cls_keyword(self):
+        class MyTestCase(object):
+            pass
+        meta = core.FixturesMeta
+        name = 'fixtures'
+        bases = object,
+        d = meta.__prepare__(name, bases, TestCase=MyTestCase)
+        d['_test'] = None
+        fixtures = meta(name, bases, d)
+        self.assertTrue(issubclass(fixtures, MyTestCase))

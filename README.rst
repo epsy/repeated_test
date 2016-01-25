@@ -220,3 +220,21 @@ use the ``tup`` decorator:
         def _ham():
             pass
         ham = _ham, 'arg1', 'arg2'
+
+
+.. _non-unittest:
+
+Replacing |tc| with another class
+---------------------------------
+
+You can replace |tc| with another class using ``WithTestClass(cls)``.
+
+For instance, if you wish to use ``unittest2``:
+
+.. code-block:: python
+
+    import unittest2
+    from repeated_test import WithTestClass
+
+    class my_tests(WithTestClass(unittest2.TestCase)):
+        ...
