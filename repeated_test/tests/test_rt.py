@@ -1,7 +1,7 @@
 import sys
 import inspect
 import unittest2
-from repeated_test import Fixtures
+from repeated_test import Fixtures, tup
 
 
 class RepeatedTestTests(unittest2.TestCase):
@@ -14,7 +14,6 @@ class RepeatedTestTests(unittest2.TestCase):
             c = 15, 5, 3
             d = 4, 2, 2
         self.sum_tests = sum_tests
-
 
     def run_test(self, fixture, name):
         tc = fixture(methodName=name)
@@ -94,3 +93,8 @@ class RepeatedTestTests(unittest2.TestCase):
             class fail_tests(Fixtures):
                 a = 1
                 a = 2
+
+    def test_tup(self):
+        def func():
+            raise NotImplementedError
+        self.assertEqual(tup(1, 2, 3)(func), (func, 1, 2, 3))
