@@ -10,7 +10,7 @@
 repeated_test
 *************
 
-.. image:: https://badges.gitter.im/Join%20Chat.svg
+.. image:: https://badges.gitter.im/epsy/repeated_test.svg
    :alt: Join the chat at https://gitter.im/epsy/repeated_test
    :target: https://gitter.im/epsy/repeated_test?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. image:: https://travis-ci.org/epsy/repeated_test.svg?branch=master
