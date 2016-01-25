@@ -1,0 +1,196 @@
+.. |ut| replace:: unittest
+.. _ut: http://docs.python.org/3/library/unittest.html
+
+.. |tc| replace:: unittest.TestCase
+.. _tc: http://docs.python.org/3/library/unittest.html#unittest.TestCase
+
+.. _repated_test:
+
+*************
+repeated_test
+*************
+
+.. image:: https://badges.gitter.im/Join%20Chat.svg
+   :alt: Join the chat at https://gitter.im/epsy/repeated_test
+   :target: https://gitter.im/epsy/repeated_test?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. image:: https://travis-ci.org/epsy/repeated_test.svg?branch=master
+    :target: https://travis-ci.org/epsy/repeated_test
+.. image:: https://coveralls.io/repos/epsy/repeated_test/badge.svg?branch=master
+    :target: https://coveralls.io/r/epsy/repeated_test?branch=master
+
+``repeated_test`` lets you nicely write tests that apply the same function to
+many sets of parameters.
+
+
+.. _example:
+
+For instance:
+
+.. code-block:: python
+
+    from repeated_tests import Fixtures
+
+    @Fixtures
+    class fixtures(object):
+        a = 10, 5, 5
+        b = 15, 7, 8
+        c = 42, 1, 1
+
+    @fixtures.with_test
+    def sum_test(self, expected, *terms):
+        self.assertEqual(expected, sum(terms))
+
+The result is unittest-compatible, and provides useful context in the
+traceback in case of errors:
+
+.. code-block:: console
+
+    $ python -m unittest my_tests
+    ..F
+    ======================================================================
+    FAIL: test_c (my_tests.sum_test)
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/home/epsy/code/repeated_test/my_tests.py", line 6, in my_fixtures
+        c = 42, 1, 1
+      File "/home/epsy/code/repeated_test/my_tests.py", line 10, in sum_test
+        self.assertEqual(expected, sum(terms))
+    AssertionError: 42 != 2
+
+    ----------------------------------------------------------------------
+    Ran 3 tests in 0.002s
+
+    FAILED (failures=1)
+
+
+.. _install:
+
+You can install it using:
+
+.. code-block:: console
+
+    $ pip install --user repeated_test
+
+
+.. _reference:
+
+Reference
+=========
+
+.. _intro:
+
+Introduction
+------------
+
+Python's |ut|_ modules helps in performing various forms of automated testing.
+One writes a class deriving from |tc|_ and adds various ``test_xyz`` methods,
+and test runners run these tests, keeping count of succesful tests, failed
+tests and produces a trace of the causes of these failures.
+
+Sometimes it makes sense to have one test be carried out for a large amount
+of different inputs. This module aims to provide an efficient way to deal with
+such situations.
+
+It does so by allowing you to write fixtures (inputs) as plain members of a
+class, and bind a test function to them. This test function is called for each
+fixture as you will see below. The produced class is a |tc|_ subclass, so it is
+compatible with |ut|_ and other |ut|-compatible test runners.
+
+
+.. _testcase:
+
+Building a test case
+--------------------
+
+In order to produce a |tc|_, ``repeated_test`` requires you to:
+
+* Subclass ``repeated_test.Fixtures``
+* Write a ``_test`` function that takes a few parameters, making use of any
+  |tc|_ method it needs
+* Assign fixtures directly in the class body, which are then unpacked as
+  arguments to the ``_test`` method
+
+You can use any |tc|_ methods in your test function, such as ``assertEqual()``
+and so forth.
+
+.. code-block:: python
+
+    from repeated_test import Fixtures
+
+    class my_fixtures(Fixtures):
+        def _test(self, arg1, arg2, arg3):
+            self.assertEqual(..., ...)
+
+        Ps = 'p1', 'p2', 'p3'
+        # _test(*Ps) will be called, ie. _test('p1', p2', 'p3')
+
+        Qs = 'q1', 'q2', 'q3'
+        # _test(*Qs) will be called, ie. _test('q1', q2', 'q3')
+
+Make sure that your fixture tuples provide the correct amount of arguments
+for your ``_test`` method, unless it has an ``*args`` parameter.
+
+
+.. _naming:
+.. _escaping:
+
+Naming and escaping
+-------------------
+
+You may name your test tuples however you like, though they may not start with
+``test_`` or ``_``. They are copied to the resulting |tc|_ class, and test
+methods are created for them. Their name is that of the tuple, prefixed with
+``test_``.
+
+.. _regular test methods:
+.. _regular:
+
+Members starting with ``test_`` or ``_`` are directly copied over to the
+resulting |tc|_ class, without being treated as fixtures. You can use this to
+insert regular tests amongst your fixtures, or constants that you do not wish
+to be treated as tests:
+
+.. code-block:: python
+
+    from repeated_test import Fixtures
+
+    class my_fixtures(Fixtures):
+        def _test(self, arg1, arg2, arg3):
+            self.assertEqual(..., ...)
+
+        def test_other(self):
+            self.assertEqual(3, 1+2)
+
+        _spam = 'spam, bacon and eggs'
+        # _spam won't be treated as a fixture, so _test(*_spam) won't be called
+
+        ham = _spam, _spam, _spam
+
+You may even call the test function using ``self._test(...)`` if necessary.
+
+
+.. _separate:
+
+Separating tests and fixtures
+-----------------------------
+
+You can apply a fixtures class to a different test function using its
+``with_test`` method:
+
+.. code-block:: python
+
+    class my_fixtures(Fixtures):
+        ...
+
+    @my_fixtures.with_test
+    def other_test(self, arg1, arg2, arg3):
+        self.assertEqual(..., ...)
+
+While the function appears out of any class, it will be used as a method of
+the resulting |tc|_ class, so keep in mind that it takes a ``self`` parameter.
+
+You can reuse a fixture class however many times you like.
+
+If you specify a test function this way, you can omit the ``_test`` method
+from your fixtures definition. However, it will not be discovered by |ut|_,
+so `regular test methods`_ won't be run.
