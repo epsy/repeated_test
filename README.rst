@@ -28,7 +28,7 @@ For instance:
 
 .. code-block:: python
 
-    from repeated_tests import Fixtures
+    from repeated_test import Fixtures
 
     @Fixtures
     class fixtures(object):
@@ -194,3 +194,29 @@ You can reuse a fixture class however many times you like.
 If you specify a test function this way, you can omit the ``_test`` method
 from your fixtures definition. However, it will not be discovered by |ut|_,
 so `regular test methods`_ won't be run.
+
+
+.. _decorator:
+
+Working with functions as fixtures
+----------------------------------
+
+It can be fairly impractical to use functions in your fixture tuples in this
+scheme. If your fixture tuple is meant to have one function in it, you can
+use the ``tup`` decorator:
+
+.. code-block:: python
+
+    from repeated_test import Fixtures, tup
+
+    class my_tests(Fixtures):
+        def _test(self, func, arg1, arg2):
+            self.assertEqual(..., ...)
+
+        @tup('arg1', 'arg2')
+        def ham():
+            pass
+        # equivalent to
+        def _ham():
+            pass
+        ham = _ham, 'arg1', 'arg2'
