@@ -13,6 +13,9 @@ except AttributeError:
     abc = collections
 
 
+__unittest = True # hides frames from this file from unittest output
+
+
 class FixturesDict(abc.MutableMapping):
     def __init__(self, *args, **kwargs):
         self.d = {}
