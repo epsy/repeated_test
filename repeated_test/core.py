@@ -67,6 +67,7 @@ class FixturesMeta(type):
         if '_test' in members:
             bases = bases + (TestCase,)
         members['_repeated_test__lines'] = lines
+        members['_TestCase'] = TestCase
         return super(FixturesMeta, meta).__new__(meta, name, bases, members)
 
     def __init__(self, *args, **kwargs):
@@ -75,7 +76,7 @@ class FixturesMeta(type):
 
     def with_test(cls, func):
         meta = type(cls)
-        tc_cls = (unittest.TestCase,) if '_test' not in cls.__dict__ else ()
+        tc_cls = (cls._TestCase,) if '_test' not in cls.__dict__ else ()
         bases = tuple(b for b in cls.__bases__ if b is not object) + tc_cls
         members = dict(cls.__dict__)
         members['_test'] = func

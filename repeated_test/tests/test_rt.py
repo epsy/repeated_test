@@ -18,6 +18,10 @@ class RepeatedTestTests(unittest2.TestCase):
             d = 4, 2, 2
         self.sum_tests = sum_tests
 
+        class MyTestCase(object):
+            pass
+        self.ctc = MyTestCase
+
     def run_test(self, fixture, name):
         tc = fixture(methodName=name)
         getattr(tc, name)()
@@ -108,28 +112,66 @@ class RepeatedTestTests(unittest2.TestCase):
         self.assertTrue(issubclass(self.sum_tests, unittest.TestCase))
 
     def test_custom_testcase_cls_par(self):
-        class MyTestCase(object):
-            pass
-        m = WithTestClass(MyTestCase)
-        class fixtures(m):
+        m = WithTestClass(self.ctc)
+        class tests(m):
             _test = None
-        self.assertTrue(issubclass(fixtures, MyTestCase))
+        self.assertTrue(issubclass(tests, self.ctc))
+
+        @tests.with_test
+        def other_test():
+            raise NotImplementedError
+        self.assertTrue(issubclass(other_test, self.ctc))
+
+    def test_custom_testcase_cls_par_sep(self):
+        m = WithTestClass(self.ctc)
+        class fixtures(m):
+            pass
+        @fixtures.with_test
+        def sep_test():
+            raise NotImplementedError
+        self.assertTrue(issubclass(sep_test, self.ctc))
 
     def test_custom_testcase_cls_body(self):
-        class MyTestCase(object):
-            pass
-        class fixtures(Fixtures):
-            _TestCase = MyTestCase
+        class tests(Fixtures):
+            _TestCase = self.ctc
             _test = None
-        self.assertTrue(issubclass(fixtures, MyTestCase))
+        self.assertTrue(issubclass(tests, self.ctc))
+
+        @tests.with_test
+        def other_test():
+            raise NotImplementedError
+        self.assertTrue(issubclass(other_test, self.ctc))
+
+    def test_custom_testcase_cls_body_sep(self):
+        class fixtures(Fixtures):
+            _TestCase = self.ctc
+        @fixtures.with_test
+        def sep_test():
+            raise NotImplementedError
+        self.assertTrue(issubclass(sep_test, self.ctc))
 
     def test_custom_testcase_cls_keyword(self):
-        class MyTestCase(object):
-            pass
         meta = core.FixturesMeta
         name = 'fixtures'
         bases = object,
-        d = meta.__prepare__(name, bases, TestCase=MyTestCase)
+        d = meta.__prepare__(name, bases, TestCase=self.ctc)
         d['_test'] = None
         fixtures = meta(name, bases, d)
-        self.assertTrue(issubclass(fixtures, MyTestCase))
+        self.assertTrue(issubclass(fixtures, self.ctc))
+
+        @fixtures.with_test
+        def other_test():
+            raise NotImplementedError
+        self.assertTrue(issubclass(other_test, self.ctc))
+
+    def test_custom_testcase_cls_keyword_sep(self):
+        meta = core.FixturesMeta
+        name = 'fixtures'
+        bases = object,
+        d = meta.__prepare__(name, bases, TestCase=self.ctc)
+        fixtures = meta(name, bases, d)
+
+        @fixtures.with_test
+        def other_test():
+            raise NotImplementedError
+        self.assertTrue(issubclass(other_test, self.ctc))
