@@ -7,6 +7,11 @@ import unittest2
 from repeated_test import Fixtures, WithTestClass, tup, core
 
 
+skip_noprepare = unittest2.skipIf(
+    sys.version_info < (3,),
+    "Py version lacks custom class dict support")
+
+
 class RepeatedTestTests(unittest2.TestCase):
     def setUp(self):
         class sum_tests(Fixtures):
@@ -95,21 +100,45 @@ class RepeatedTestTests(unittest2.TestCase):
         self.assertIn("sum_tests", tb_funcs)
         self.assertIn(["            c = 15, 5, 3\n"], tb_lines)
 
-    @unittest2.skipIf(
-        sys.version_info < (3,), "Py version lacks custom class dict support")
+    @skip_noprepare
     def test_dup(self):
         with self.assertRaises(ValueError):
             class fail_tests(Fixtures):
                 a = 1
                 a = 2
 
-    @unittest2.skipIf(
-        sys.version_info < (3,), "Py version lacks custom class dict support")
+    @skip_noprepare
     def test_dup_with(self):
         with self.assertRaises(ValueError):
             class fail_tests(WithTestClass(unittest.TestCase)):
                 a = 1
                 a = 2
+
+    @skip_noprepare
+    def test_dup_ok(self):
+        class fail_tests(Fixtures):
+            _private = 1
+            _private = 2
+
+    @skip_noprepare
+    def test_dup_testfunc(self):
+        with self.assertRaises(ValueError):
+            class fail_tests(Fixtures):
+                def _test(self):
+                    raise NotImplementedError
+                _test # silences pyflakes redef warning
+                def _test(self):
+                    raise NotImplementedError
+
+    @skip_noprepare
+    def test_dup_regular(self):
+        with self.assertRaises(ValueError):
+            class fail_tests(Fixtures):
+                def test_1(self):
+                    raise NotImplementedError
+                test_1 # silences pyflakes redef warning
+                def test_1(self):
+                    raise NotImplementedError
 
     def test_tup(self):
         def func():

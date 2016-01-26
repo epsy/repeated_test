@@ -29,7 +29,7 @@ class FixturesDict(abc.MutableMapping):
         return len(self.d)
 
     def __setitem__(self, key, value):
-        if key in self.d:
+        if key in self.d and (not key.startswith('_') or key == '_test'):
             raise ValueError("Fixture already present: " + key)
         self.lines[key] = traceback.extract_stack(sys._getframe(1), 1)[0][:3]
         self.d[key] = value
