@@ -72,6 +72,18 @@ You can install it using:
     $ pip install --user repeated_test
 
 
+.. _help:
+
+Help / Issues
+=============
+
+You can get help in the
+`gitter.im chatroom <https://gitter.im/epsy/repeated_test>`_.
+
+If you find any issues or have any requests, use
+`GitHub Issues <https://github.com/epsy/repeated_test/issues>`_.
+
+
 .. _reference:
 
 Reference
