@@ -15,8 +15,8 @@ repeated_test
    :target: https://gitter.im/epsy/repeated_test?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 .. image:: https://travis-ci.org/epsy/repeated_test.svg?branch=master
     :target: https://travis-ci.org/epsy/repeated_test
-.. image:: https://coveralls.io/repos/epsy/repeated_test/badge.svg?branch=master
-    :target: https://coveralls.io/r/epsy/repeated_test?branch=master
+.. image:: https://coveralls.io/repos/github/epsy/repeated_test/badge.svg?branch=master
+    :target: https://coveralls.io/github/epsy/repeated_test?branch=master
 
 ``repeated_test`` lets you nicely write tests that apply the same function to
 many sets of parameters.
