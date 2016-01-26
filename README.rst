@@ -30,13 +30,12 @@ For instance:
 
     from repeated_test import Fixtures
 
-    @Fixtures
-    class fixtures(object):
+    class my_fixtures(Fixtures):
         a = 10, 5, 5
         b = 15, 7, 8
         c = 42, 1, 1
 
-    @fixtures.with_test
+    @my_fixtures.with_test
     def sum_test(self, expected, *terms):
         self.assertEqual(expected, sum(terms))
 
