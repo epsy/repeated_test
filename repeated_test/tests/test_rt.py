@@ -103,6 +103,14 @@ class RepeatedTestTests(unittest2.TestCase):
                 a = 1
                 a = 2
 
+    @unittest2.skipIf(
+        sys.version_info < (3,), "Py version lacks custom class dict support")
+    def test_dup_with(self):
+        with self.assertRaises(ValueError):
+            class fail_tests(WithTestClass(unittest.TestCase)):
+                a = 1
+                a = 2
+
     def test_tup(self):
         def func():
             raise NotImplementedError

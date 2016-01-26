@@ -88,8 +88,8 @@ Fixtures = six.with_metaclass(FixturesMeta)
 
 
 def WithTestClass(cls):
-    class metaclass(type):
-        def __new__(cls_, name, this_bases, d):
+    class metaclass(FixturesMeta):
+        def __new__(cls_, name, bases, d):
             return FixturesMeta(name, (), d, TestCase=cls)
     return type.__new__(metaclass, "WithTestClass_"+cls.__name__, (), {})
 
