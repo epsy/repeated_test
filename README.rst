@@ -31,13 +31,12 @@ For instance:
     from repeated_test import Fixtures
 
     class my_fixtures(Fixtures):
+        def _test(self, expected, *terms):
+            self.assertEqual(expected, sum(terms))
+
         a = 10, 5, 5
         b = 15, 7, 8
         c = 42, 1, 1
-
-    @my_fixtures.with_test
-    def sum_test(self, expected, *terms):
-        self.assertEqual(expected, sum(terms))
 
 The result is unittest-compatible, and provides useful context in the
 traceback in case of errors:
@@ -47,12 +46,12 @@ traceback in case of errors:
     $ python -m unittest my_tests
     ..F
     ======================================================================
-    FAIL: test_c (my_tests.sum_test)
+    FAIL: test_c (my_tests.my_fixtures)
     ----------------------------------------------------------------------
     Traceback (most recent call last):
-      File "/home/epsy/code/repeated_test/my_tests.py", line 6, in my_fixtures
+      File "my_tests.py", line 9, in my_fixtures
         c = 42, 1, 1
-      File "/home/epsy/code/repeated_test/my_tests.py", line 10, in sum_test
+      File "my_tests.py", line 5, in _test
         self.assertEqual(expected, sum(terms))
     AssertionError: 42 != 2
 
@@ -60,7 +59,6 @@ traceback in case of errors:
     Ran 3 tests in 0.002s
 
     FAILED (failures=1)
-
 
 .. _install:
 
@@ -116,7 +114,7 @@ Building a test case
 In order to produce a |tc|_, ``repeated_test`` requires you to:
 
 * Subclass ``repeated_test.Fixtures``
-* Write a ``_test`` function that takes a few parameters, making use of any
+* Write a ``_test`` method that takes a few parameters, making use of any
   |tc|_ method it needs
 * Assign fixtures directly in the class body, which are then unpacked as
   arguments to the ``_test`` method
@@ -191,6 +189,7 @@ You can apply a fixtures class to a different test function using its
 .. code-block:: python
 
     class my_fixtures(Fixtures):
+        _test = None
         ...
 
     @my_fixtures.with_test
@@ -202,9 +201,11 @@ the resulting |tc|_ class, so keep in mind that it takes a ``self`` parameter.
 
 You can reuse a fixture class however many times you like.
 
-If you specify a test function this way, you can omit the ``_test`` method
-from your fixtures definition. However, it will not be discovered by |ut|_,
+If you specify a test function this way, you can set ``_test = None``
+in your fixtures definition. However, it will not be discovered by |ut|_,
 so `regular test methods`_ won't be run.
+Omitting ``_test`` completely raises an error in order to prevent accidentally
+disabling your tests.
 
 
 .. _decorator:
