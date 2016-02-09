@@ -64,7 +64,9 @@ class FixturesMeta(type):
                 members['test_' + key] = _make_testfunc_runner(
                     value, lines.get(key), container_loc, name, key)
         bases = tuple(b for b in bases if b is not object)
-        if '_test' in members:
+        if '_test' not in members:
+            raise ValueError("'_test' function missing from Fixtures class")
+        if members['_test'] is not None:
             bases = bases + (TestCase,)
         members['_repeated_test__lines'] = lines
         members['_TestCase'] = TestCase
@@ -76,7 +78,7 @@ class FixturesMeta(type):
 
     def with_test(cls, func):
         meta = type(cls)
-        tc_cls = (cls._TestCase,) if '_test' not in cls.__dict__ else ()
+        tc_cls = (cls._TestCase,) if cls.__dict__['_test'] is None else ()
         bases = tuple(b for b in cls.__bases__ if b is not object) + tc_cls
         members = dict(cls.__dict__)
         members['_test'] = func
