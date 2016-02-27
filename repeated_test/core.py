@@ -31,6 +31,15 @@ class FixturesDict(abc.MutableMapping):
     def __setitem__(self, key, value):
         if key in self.d and (not key.startswith('_') or key == '_test'):
             raise ValueError("Fixture already present: " + key)
+        else:
+            if key.startswith('test_'):
+                if key[5:] in self.d:
+                    raise ValueError(
+                        "Plain test conflicts with fixture: " + key)
+            elif not key.startswith('_'):
+                if 'test_' + key in self.d:
+                    raise ValueError(
+                        "Fixture conflicts with plain test: " + key)
         self.lines[key] = traceback.extract_stack(sys._getframe(1), 1)[0][:3]
         self.d[key] = value
 

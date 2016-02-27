@@ -147,6 +147,34 @@ class RepeatedTestTests(unittest2.TestCase):
                 def test_1(self):
                     raise NotImplementedError
 
+    def test_copied_func(self):
+        trap = []
+        class fixtures(Fixtures):
+            def _test(self):
+                raise NotImplementedError
+            def test_a(self):
+                trap.append(0)
+        self.assertEqual(trap, [])
+        self.run_test(fixtures, 'test_a')
+        self.assertEqual(trap, [0])
+
+    @skip_noprepare
+    def test_dup_copied_func(self):
+        with self.assertRaises(ValueError):
+            class fail_test_1(Fixtures):
+                def _test(self):
+                    raise NotImplementedError
+                def test_a(self):
+                    raise NotImplementedError
+                a = ()
+        with self.assertRaises(ValueError):
+            class fail_test_2(Fixtures):
+                def _test(self):
+                    raise NotImplementedError
+                a = ()
+                def test_a(self):
+                    raise NotImplementedError
+
     def test_tup(self):
         def func():
             raise NotImplementedError
