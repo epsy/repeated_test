@@ -132,9 +132,11 @@ def get_loc(fake_loc, cls_loc, cls_name, member_name):
 
 
 def _raise_at_custom_line(filename, lineno, funcname):
+    funcname = funcname.strip('<>')
     d = {}
     six.exec_(compile(_make_raiser(lineno, funcname), filename, 'exec'), d)
-    return d[funcname]
+    ret = d[funcname]
+    return ret
 
 
 def _make_raiser(lineno, funcname):

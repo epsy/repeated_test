@@ -105,6 +105,10 @@ class RepeatedTestTests(unittest2.TestCase):
         self.assertIn("sum_tests", tb_funcs)
         self.assertIn(["            c = 15, 5, 3\n"], tb_lines)
 
+    def test_relocate_frame_chevrons(self):
+        f = core._raise_at_custom_line("mymodule.py", 123, "<module>")
+        self.assertEqual(f.__name__, 'module')
+
     @skip_noprepare
     def test_dup(self):
         with self.assertRaises(ValueError):
