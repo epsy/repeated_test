@@ -123,7 +123,8 @@ def get_loc(fake_loc, cls_loc, cls_name, member_name):
         return fake_loc
     cls_filename, cls_lineno, cls_funcname = cls_loc
     lines = list(open(cls_filename))
-    pat = re.compile(r"^\s*" + re.escape(member_name) + "\s*=")
+    esc = re.escape(member_name)
+    pat = re.compile(r"^\s*(" + esc + r"\s*=|def\s+" + esc + r"\s*\()")
     for i, line in enumerate(lines[cls_lineno:], cls_lineno+1):
         if pat.match(line):
             return cls_filename, i, cls_name

@@ -105,6 +105,33 @@ class RepeatedTestTests(unittest2.TestCase):
         self.assertIn("sum_tests", tb_funcs)
         self.assertIn(["            c = 15, 5, 3\n"], tb_lines)
 
+    def test_func_location(self):
+        class func_tests(Fixtures):
+            def _test(self, func, a, b):
+                raise AssertionError
+
+            @tup("one", "params")
+            def one():
+                pass
+        try:
+            self.run_test(func_tests, "test_one")
+        except AssertionError:
+            _, _, tb = sys.exc_info()
+        else:
+            raise AssertionError("Expected AssertionError")
+        tb_funcs = []
+        tb_lines = []
+        while tb is not None:
+            fi = inspect.getframeinfo(tb)
+            tb_funcs.append(fi.function)
+            tb_lines.append(fi.code_context)
+            tb = tb.tb_next
+        self.assertIn("func_tests", tb_funcs)
+        try:
+            self.assertIn(['            @tup("one", "params")\n'], tb_lines)
+        except AssertionError:
+            self.assertIn(['            def one():\n'], tb_lines)
+
     def test_relocate_frame_chevrons(self):
         f = core._raise_at_custom_line("mymodule.py", 123, "<module>")
         self.assertEqual(f.__name__, 'module')
