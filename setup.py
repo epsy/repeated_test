@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 setup(
     name="repeated_test",
     packages=find_packages(),
-    version="1.0",
+    version="1.0.1",
     description="A quick unittest-compatible framework for repeating a "
                 "test function over many fixtures",
     license="MIT",
