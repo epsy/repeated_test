@@ -2,3 +2,4 @@ include .coveragerc
 include .gitignore
 include tox.ini
 include .travis.yml
+include LICENSE.txt
