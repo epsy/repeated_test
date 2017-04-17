@@ -250,3 +250,8 @@ For instance, if you wish to use ``unittest2``:
 
     class my_tests(WithTestClass(unittest2.TestCase)):
         ...
+
+
+.. image:: https://badges.gitter.im/epsy/repeated_test.svg
+   :alt: Join the chat at https://gitter.im/epsy/repeated_test
+   :target: https://gitter.im/epsy/repeated_test?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
