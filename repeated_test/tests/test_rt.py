@@ -111,7 +111,7 @@ class RepeatedTestTests(unittest.TestCase):
 
             @tup("one", "params")
             def one():
-                pass
+                pass # pragma: nocover
         try:
             self.run_test(func_tests, "test_one")
         except AssertionError:
