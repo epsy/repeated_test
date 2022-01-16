@@ -18,7 +18,7 @@ setup(
     author_email="kaiser.yann@gmail.com",
     url="https://github.com/epsy/repeated_test",
     tests_require=[],
-    python_requires="<3.10",
+    python_requires=">=3.5",
     install_requires=['six>=1.7'],
     test_suite="repeated_test.tests",
     keywords=['test', 'testing', 'unittest', 'fixtures'],
