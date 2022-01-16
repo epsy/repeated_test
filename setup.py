@@ -1,7 +1,9 @@
+import pathlib
 from setuptools import setup, find_packages
 
-with open("README.rst") as fh:
-    long_description = fh.read()
+here = pathlib.Path(__file__).parent.resolve()
+
+long_description = (here / "README.rst").read_text(encoding='utf-8')
 
 setup(
     name="repeated_test",
@@ -15,8 +17,8 @@ setup(
     author="Yann Kaiser",
     author_email="kaiser.yann@gmail.com",
     url="https://github.com/epsy/repeated_test",
-    tests_require=['unittest2'],
-    python_requires="<3.10",
+    tests_require=[],
+    python_requires=">=3.5",
     install_requires=['six>=1.7'],
     test_suite="repeated_test.tests",
     keywords=['test', 'testing', 'unittest', 'fixtures'],
@@ -24,12 +26,12 @@ setup(
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 2.6",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.2",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Software Development :: Quality Assurance",
         "Topic :: Software Development :: Testing",
     ],
