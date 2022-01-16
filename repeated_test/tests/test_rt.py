@@ -2,17 +2,16 @@ import sys
 import inspect
 import unittest
 
-import unittest2
 
 from repeated_test import Fixtures, WithTestClass, tup, core
 
 
-skip_noprepare = unittest2.skipIf(
+skip_noprepare = unittest.skipIf(
     sys.version_info < (3,),
     "Py version lacks custom class dict support")
 
 
-class RepeatedTestTests(unittest2.TestCase):
+class RepeatedTestTests(unittest.TestCase):
     def setUp(self):
         class sum_tests(Fixtures):
             def _test(self, total, *terms):
@@ -215,7 +214,7 @@ class RepeatedTestTests(unittest2.TestCase):
         self.assertTrue(issubclass(self.sum_tests, unittest.TestCase))
 
 
-class CustomTestClassTests(unittest2.TestCase):
+class CustomTestClassTests(unittest.TestCase):
     def setUp(self):
         class MyTestCase(object):
             pass

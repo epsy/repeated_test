@@ -17,7 +17,7 @@ setup(
     author="Yann Kaiser",
     author_email="kaiser.yann@gmail.com",
     url="https://github.com/epsy/repeated_test",
-    tests_require=['unittest2'],
+    tests_require=[],
     python_requires="<3.10",
     install_requires=['six>=1.7'],
     test_suite="repeated_test.tests",
