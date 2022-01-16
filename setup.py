@@ -1,5 +1,7 @@
 from setuptools import setup, find_packages
 
+with open("README.rst") as fh:
+    long_description = fh.read()
 
 setup(
     name="repeated_test",
@@ -7,11 +9,14 @@ setup(
     version="1.0.1",
     description="A quick unittest-compatible framework for repeating a "
                 "test function over many fixtures",
+    long_description=long_description,
+    long_description_content_type='text/x-rst',
     license="MIT",
     author="Yann Kaiser",
     author_email="kaiser.yann@gmail.com",
     url="https://github.com/epsy/repeated_test",
     tests_require=['unittest2'],
+    python_requires="<3.10",
     install_requires=['six>=1.7'],
     test_suite="repeated_test.tests",
     keywords=['test', 'testing', 'unittest', 'fixtures'],
