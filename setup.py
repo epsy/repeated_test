@@ -8,7 +8,7 @@ long_description = (here / "README.rst").read_text(encoding='utf-8')
 setup(
     name="repeated_test",
     packages=find_packages(),
-    version="1.0.1",
+    version="2.0.0",
     description="A quick unittest-compatible framework for repeating a "
                 "test function over many fixtures",
     long_description=long_description,
