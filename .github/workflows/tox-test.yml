@@ -26,7 +26,6 @@ jobs:
         task:
           - 'test'
         python-version:
-          - '2.6'
           - '2.7'
           - 'pypy2'
           - '3.5'
