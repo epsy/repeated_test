@@ -20,5 +20,3 @@ jobs:
     uses: epsy/python-workflows/.github/workflows/python-ci.yaml@main
     with:
       package-folder: repeated_test
-    secrets:
-      delegate_github_token: ${{ secrets.GITHUB_TOKEN }}
