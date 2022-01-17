@@ -17,7 +17,7 @@ on:
 
 jobs:
   python-ci:
-    uses: epsy/python-workflows/.github/python-ci@main
+    uses: epsy/python-workflows/.github/workflows/python-ci@main
     with:
     secrets:
       delegate_github_token: ${{ secrets.GITHUB_TOKEN }}
