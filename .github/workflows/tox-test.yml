@@ -18,6 +18,5 @@ on:
 jobs:
   python-ci:
     uses: epsy/python-workflows/.github/workflows/python-ci.yaml@main
-    with:
     secrets:
       delegate_github_token: ${{ secrets.GITHUB_TOKEN }}
