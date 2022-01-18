@@ -13,8 +13,8 @@ repeated_test
 .. image:: https://badges.gitter.im/epsy/repeated_test.svg
    :alt: Join the chat at https://gitter.im/epsy/repeated_test
    :target: https://gitter.im/epsy/repeated_test?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-.. image:: https://travis-ci.org/epsy/repeated_test.svg?branch=master
-    :target: https://travis-ci.org/epsy/repeated_test
+.. image:: https://github.com/epsy/repeated_test/actions/workflows/ci.yml/badge.svg?branch=master
+    :target: https://github.com/epsy/repeated_test/actions/workflows/ci.yml
 .. image:: https://coveralls.io/repos/github/epsy/repeated_test/badge.svg?branch=master
     :target: https://coveralls.io/github/epsy/repeated_test?branch=master
 
