@@ -18,7 +18,7 @@ repeated_test
 .. image:: https://coveralls.io/repos/github/epsy/repeated_test/badge.svg?branch=master
     :target: https://coveralls.io/github/epsy/repeated_test?branch=master
 
-``repeated_test`` lets you nicely write tests that apply the same function to
+``repeated_test`` lets you write tests that apply the same function to
 many sets of parameters.
 
 
@@ -139,6 +139,40 @@ and so forth.
 Make sure that your fixture tuples provide the correct amount of arguments
 for your ``_test`` method, unless it has an ``*args`` parameter.
 
+
+.. _running:
+
+Running a test case
+-------------------
+
+You can run a ``repeated_test`` test case like any other |tc|_ class:
+
+.. code-block:: shell
+
+    python -m unittest
+    python -m unittest my_test_module
+    python -m unittest my_test_module.my_fixtures
+
+    # To refer to an individual test, prefix the name of the fixture with "test_"
+    python -m unittest my_test_module.my_fixtures.test_Ps
+
+.. seealso::
+
+    `Official |ut| docs <https://docs.python.org/3/library/unittest.html#command-line-interface>`_
+
+You can also use a |ut|-compatible test runer, like |pyt|_:
+
+.. code-block:: shell
+
+    python -m pytest
+    python -m pytest my_test_module.py
+    python -m pytest my_test_module.py -k my_fixtures
+    python -m pytest my_test_module.py -k test_Ps
+    python -m pytest my_test_module.py::my_fixtures::test_Ps
+
+.. seealso::
+
+    `Official pytest docs <https://docs.pytest.org/en/stable/how-to/usage.html>`_
 
 .. _options:
 
