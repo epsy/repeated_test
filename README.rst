@@ -92,15 +92,15 @@ Introduction
 ------------
 
 Python's |ut|_ modules helps in performing various forms of automated testing.
-One writes a class deriving from |tc|_ and adds various ``test_xyz`` methods,
-and test runners run these tests, keeping count of succesful tests, failed
-tests and produces a trace of the causes of these failures.
+One writes a class deriving from |tc|_ and adds various ``test_xyz`` methods.
+Test runners run these tests, keeping count of succesful and failed tests,
+and produces a trace with the causes of these failures.
 
 Sometimes it makes sense to have one test be carried out for a large amount
-of different inputs. This module aims to provide an efficient way to deal with
-such situations.
+of different inputs.
+This module aims to provide an efficient way to do this.
 
-It does so by allowing you to write fixtures (inputs) as plain members of a
+It allows you to write fixtures (inputs) as plain members of a
 class, and bind a test function to them. This test function is called for each
 fixture as you will see below. The produced class is a |tc|_ subclass, so it is
 compatible with |ut|_ and other |ut|-compatible test runners.
@@ -145,37 +145,7 @@ for your ``_test`` method, unless it has an ``*args`` parameter.
 Passing in keyword arguments
 ----------------------------
 
-Sometimes you need to set up parameters that you only use some of the time.
-You can use default arguments for this,
-but it can become unwieldly and difficult to follow as you add more parameters:
-
-.. code-block:: python
-
-    import sys
-
-    from repeated_test import Fixtures
-
-    class my_fixtures(Fixtures):
-        def _test(self, arg1, arg2, min_version=None, max_version=None):
-            if min_version is not None and sys.version_info < min_version:
-                self.skipTest("Python version too low")
-            if max_version is not None and sys.version_info >= max_version:
-                self.skipTest("Python version too high")
-            self.assertEqual(arg1, arg2)
-
-        not_using_versions = "abc", "abc"
-        # -> _test("abc", "abc")
-
-        using_min_version = "abc", "abc", (3, 9)
-        # -> _test("abc", "abc", (3, 9))
-
-        using_max_version = "abc", "abc", None, (3, 9)
-        # -> _test("abc", "abc", None, (3, 9))
-
-        using_both_versions = "abc", "abc", (3, 8), (3, 9)
-        # -> _test("abc", "abc", (3, 8), (3, 9))
-
-Instead, you can use `repeated_test.options` to pass in arguments by name:
+You can pass in keyword arguments using `repeated_test.options`:
 
 .. code-block:: python
 
@@ -185,17 +155,10 @@ Instead, you can use `repeated_test.options` to pass in arguments by name:
 
     class my_fixtures(Fixtures):
         def _test(self, arg1, arg2, *, min_version=None, max_version=None):
-            if min_version is not None and sys.version_info < min_version:
-                self.skipTest("Python version too low")
-            if max_version is not None and sys.version_info >= max_version:
-                self.skipTest("Python version too high")
-            self.assertEqual(arg1, arg2)
+            ...
 
         not_using_versions = "abc", "abc"
         # -> _test("abc", "abc")
-
-        using_min_version = "abc", "abc", options(min_version=(3, 9))
-        # -> _test("abc", "abc", min_version=(3, 9))
 
         using_max_version = "abc", "abc", options(max_version=(3, 9))
         # -> _test("abc", "abc", max_version=(3, 9))
@@ -203,11 +166,10 @@ Instead, you can use `repeated_test.options` to pass in arguments by name:
         using_both_versions = "abc", "abc", options(min_version=(3, 8), max_version=(3, 9))
         # -> _test("abc", "abc", min_version=(3, 8), max_version=(3, 9))
 
-        using_both_versions_alternative = "abc", "abc", options(min_version=(3, 8)), options(max_version=(3, 9))
-        # -> _test("abc", "abc", min_version=(3, 8), max_version=(3, 9))
+        using_both_versions_2 = "abc", "abc", options(min_version=(3, 8)), options(max_version=(3, 9))
+        # Same, but by specifying options separately
 
-This works with any paramter you can pass by name,
-but putting parameters after `*` ensures that they can only be passed by name.
+This can be useful if you have multiple options that are only used some of the time.
 
 .. _naming:
 .. _escaping:
