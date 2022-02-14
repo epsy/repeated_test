@@ -117,7 +117,7 @@ In order to produce a |tc|_, ``repeated_test`` requires you to:
 * Write a ``_test`` method that takes a few parameters, making use of any
   |tc|_ method it needs
 * Assign fixtures directly in the class body, which are then unpacked as
-  arguments to the ``_test`` method
+  arguments to the ``_test`` method (as in ``_test(*args)``)
 
 You can use any |tc|_ methods in your test function, such as ``assertEqual()``
 and so forth.
@@ -139,6 +139,75 @@ and so forth.
 Make sure that your fixture tuples provide the correct amount of arguments
 for your ``_test`` method, unless it has an ``*args`` parameter.
 
+
+.. _options:
+
+Passing in keyword arguments
+----------------------------
+
+Sometimes you need to set up parameters that you only use some of the time.
+You can use default arguments for this,
+but it can become unwieldly and difficult to follow as you add more parameters:
+
+.. code-block:: python
+
+    import sys
+
+    from repeated_test import Fixtures
+
+    class my_fixtures(Fixtures):
+        def _test(self, arg1, arg2, min_version=None, max_version=None):
+            if min_version is not None and sys.version_info < min_version:
+                self.skipTest("Python version too low")
+            if max_version is not None and sys.version_info >= max_version:
+                self.skipTest("Python version too high")
+            self.assertEqual(arg1, arg2)
+
+        not_using_versions = "abc", "abc"
+        # -> _test("abc", "abc")
+
+        using_min_version = "abc", "abc", (3, 9)
+        # -> _test("abc", "abc", (3, 9))
+
+        using_max_version = "abc", "abc", None, (3, 9)
+        # -> _test("abc", "abc", None, (3, 9))
+
+        using_both_versions = "abc", "abc", (3, 8), (3, 9)
+        # -> _test("abc", "abc", (3, 8), (3, 9))
+
+Instead, you can use `repeated_test.options` to pass in arguments by name:
+
+.. code-block:: python
+
+    import sys
+
+    from repeated_test import Fixtures, options
+
+    class my_fixtures(Fixtures):
+        def _test(self, arg1, arg2, *, min_version=None, max_version=None):
+            if min_version is not None and sys.version_info < min_version:
+                self.skipTest("Python version too low")
+            if max_version is not None and sys.version_info >= max_version:
+                self.skipTest("Python version too high")
+            self.assertEqual(arg1, arg2)
+
+        not_using_versions = "abc", "abc"
+        # -> _test("abc", "abc")
+
+        using_min_version = "abc", "abc", options(min_version=(3, 9))
+        # -> _test("abc", "abc", min_version=(3, 9))
+
+        using_max_version = "abc", "abc", options(max_version=(3, 9))
+        # -> _test("abc", "abc", max_version=(3, 9))
+
+        using_both_versions = "abc", "abc", options(min_version=(3, 8), max_version=(3, 9))
+        # -> _test("abc", "abc", min_version=(3, 8), max_version=(3, 9))
+
+        using_both_versions_alternative = "abc", "abc", options(min_version=(3, 8)), options(max_version=(3, 9))
+        # -> _test("abc", "abc", min_version=(3, 8), max_version=(3, 9))
+
+This works with any paramter you can pass by name,
+but putting parameters after `*` ensures that they can only be passed by name.
 
 .. _naming:
 .. _escaping:

@@ -4,10 +4,12 @@
 
 import sys
 import inspect
+from types import TracebackType
+from typing import Optional
 import unittest
 
 
-from repeated_test import Fixtures, WithTestClass, tup, core
+from repeated_test import Fixtures, WithTestClass, tup, core, options
 
 
 skip_noprepare = unittest.skipIf(
@@ -15,29 +17,54 @@ skip_noprepare = unittest.skipIf(
     "Py version lacks custom class dict support")
 
 
+def get_tb_funcs_lines(tb: Optional[TracebackType]):
+    tb_funcs = []
+    tb_lines = []
+    while tb is not None:
+        fi = inspect.getframeinfo(tb)
+        tb_funcs.append(fi.function)
+        tb_lines.append(fi.code_context)
+        tb = tb.tb_next
+    return tb_funcs, tb_lines
+
+
 class RepeatedTestTests(unittest.TestCase):
     def setUp(self):
         class sum_tests(Fixtures):
-            def _test(self, total, *terms):
-                self.assertEqual(total, sum(terms))
+            def _test(self, total, *terms, optional=0):
+                self.assertEqual(total, sum(terms) + optional)
             a = 3, 2, 1
             b = 6, 3, 2, 1
             c = 15, 5, 3
             d = 4, 2, 2
+            optional_success = 6, 3, 2, options(optional=1)
+            optional_failure = 1, 3, 2, options(optional=1)
+            optional_badargs = 3, 2, 1, options(doesntexist=1)
+
         self.sum_tests = sum_tests
 
-    def run_test(self, fixture, name):
+    def run_test(self, fixture, name, **kwargs):
+        with self.subTest(name):
+            self.run_test_without_subtest(fixture, name, **kwargs)
+
+    def run_test_without_subtest(self, fixture, name, *, raises=None):
         tc = fixture(methodName=name)
-        getattr(tc, name)()
+        if raises is not None:
+            with self.assertRaises(raises) as e:
+                getattr(tc, name)()
+        else:
+            getattr(tc, name)()
 
     def test_success(self):
         self.run_test(self.sum_tests, 'test_a')
         self.run_test(self.sum_tests, 'test_b')
         self.run_test(self.sum_tests, 'test_d')
+        self.run_test(self.sum_tests, 'test_optional_success')
 
     def test_failure(self):
-        with self.assertRaises(AssertionError):
-            self.run_test(self.sum_tests, 'test_c')
+        self.run_test(self.sum_tests, 'test_c', raises=AssertionError)
+        self.run_test(self.sum_tests, 'test_optional_failure', raises=AssertionError)
+        self.run_test(self.sum_tests, 'test_optional_badargs', raises=TypeError)
 
     def test_alt_test(self):
         @self.sum_tests.with_test
@@ -51,8 +78,7 @@ class RepeatedTestTests(unittest.TestCase):
         self.run_test(mul_test, 'test_c')
         self.run_test(mul_test, 'test_d')
 
-        with self.assertRaises(AssertionError):
-            self.run_test(mul_test, 'test_a')
+        self.run_test(mul_test, 'test_a', raises=AssertionError)
 
     def test_unspecified_test(self):
         class fixtures(Fixtures):
@@ -71,18 +97,64 @@ class RepeatedTestTests(unittest.TestCase):
         self.run_test(div_tests, 'test_a')
         self.run_test(div_tests, 'test_b')
         self.run_test(div_tests, 'test_d')
-        with self.assertRaises(AssertionError):
-            self.run_test(div_tests, 'test_c')
+        self.run_test(div_tests, 'test_c', raises=AssertionError)
 
         @fixtures.with_test
         def sub_tests(self, r, a, b):
             self.assertEqual(r, a - b)
         self.run_test(sub_tests, 'test_c')
         self.run_test(sub_tests, 'test_d')
-        with self.assertRaises(AssertionError):
-            self.run_test(sub_tests, 'test_a')
-        with self.assertRaises(AssertionError):
-            self.run_test(sub_tests, 'test_b')
+        self.run_test(sub_tests, 'test_a', raises=AssertionError)
+        self.run_test(sub_tests, 'test_b', raises=AssertionError)
+
+    def test_options(self):
+        def mul(terms):
+            result = 1
+            for t in terms:
+                result *= t
+            return result
+
+        class option_tests(Fixtures):
+            def _test(self, expected_result, *terms, operation=sum, modulo=None):
+                result = operation(terms)
+                if modulo is not None:
+                    result = result % modulo
+                print(expected_result, result, terms, operation, modulo)
+                self.assertEqual(expected_result, result)
+
+            not_using_options = 5, 2, 3
+            has_options = 6, 2, 3, options(operation=mul)
+            has_multiple_options_one_call = 1, 2, 3, options(operation=mul, modulo=5)
+            has_multiple_options_multiple_calls = 1, 2, 3, options(operation=mul), options(modulo=5)
+            has_interleaved_option_calls = 1, options(operation=mul), 2, options(modulo=5), 3
+
+            fails_assertion = 0, 2, 3, options(operation=mul, modulo=5)
+
+        self.run_test(option_tests, "test_not_using_options")
+        self.run_test(option_tests, "test_has_options")
+        self.run_test(option_tests, "test_has_multiple_options_one_call")
+        self.run_test(option_tests, "test_has_multiple_options_multiple_calls")
+        self.run_test(option_tests, "test_has_interleaved_option_calls")
+
+        self.run_test(option_tests, "test_fails_assertion", raises=AssertionError)
+
+    def test_options_required_args(self):
+        class option_tests(Fixtures):
+            def _test(self, a, b, *, expected):
+                self.assertEqual(expected, a + b)
+
+            kwoarg_as_options = 1, 2, options(expected=3)
+            pokarg_as_options = 1, options(b=2, expected=3)
+
+            missing_kwoarg = 1, 2
+            duplicate_argument = 2, options(a=1, expected=3)
+
+        self.run_test(option_tests, "test_kwoarg_as_options")
+        self.run_test(option_tests, "test_pokarg_as_options")
+
+        self.run_test(option_tests, "test_missing_kwoarg", raises=TypeError)
+        self.run_test(option_tests, "test_duplicate_argument", raises=TypeError)
+
 
     def test_missing_test(self):
         with self.assertRaises(ValueError,
@@ -91,22 +163,22 @@ class RepeatedTestTests(unittest.TestCase):
                 a = 1, 2, 3
                 b = 4, 5, 6
 
+    def assert_tb(self, fixture, name, func, line, *,  raises=AssertionError):
+        with self.subTest(name):
+            try:
+                self.run_test_without_subtest(fixture, name)
+            except raises:
+                _, _, tb = sys.exc_info()
+            else:
+                raise AssertionError(f"Expected {raises.__name__} to be raised")
+            tb_funcs, tb_lines = get_tb_funcs_lines(tb)
+            self.assertIn(func, tb_funcs)
+            self.assertIn([f"            {line}\n"], tb_lines)
+
     def test_line(self):
-        try:
-            self.run_test(self.sum_tests, "test_c")
-        except AssertionError:
-            _, _, tb = sys.exc_info()
-        else:
-            raise AssertionError("Expected AssertionError")
-        tb_funcs = []
-        tb_lines = []
-        while tb is not None:
-            fi = inspect.getframeinfo(tb)
-            tb_funcs.append(fi.function)
-            tb_lines.append(fi.code_context)
-            tb = tb.tb_next
-        self.assertIn("sum_tests", tb_funcs)
-        self.assertIn(["            c = 15, 5, 3\n"], tb_lines)
+        self.assert_tb(self.sum_tests, "test_c", "sum_tests", "c = 15, 5, 3")
+        self.assert_tb(self.sum_tests, "test_optional_failure", "sum_tests", "optional_failure = 1, 3, 2, options(optional=1)")
+        self.assert_tb(self.sum_tests, "test_optional_badargs", "sum_tests", "optional_badargs = 3, 2, 1, options(doesntexist=1)", raises=TypeError)
 
     def test_func_location(self):
         class func_tests(Fixtures):
@@ -117,7 +189,7 @@ class RepeatedTestTests(unittest.TestCase):
             def one():
                 pass # pragma: no cover
         try:
-            self.run_test(func_tests, "test_one")
+            self.run_test_without_subtest(func_tests, "test_one")
         except AssertionError:
             _, _, tb = sys.exc_info()
         else:
