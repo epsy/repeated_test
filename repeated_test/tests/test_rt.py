@@ -50,7 +50,7 @@ class RepeatedTestTests(unittest.TestCase):
     def run_test_without_subtest(self, fixture, name, *, raises=None):
         tc = fixture(methodName=name)
         if raises is not None:
-            with self.assertRaises(raises) as e:
+            with self.assertRaises(raises):
                 getattr(tc, name)()
         else:
             getattr(tc, name)()
