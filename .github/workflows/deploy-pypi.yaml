@@ -14,7 +14,9 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
 
-      - uses: actions/checkout@master
+      - uses: actions/checkout@2
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v1
         with:
