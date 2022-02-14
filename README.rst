@@ -4,6 +4,9 @@
 .. |tc| replace:: unittest.TestCase
 .. _tc: http://docs.python.org/3/library/unittest.html#unittest.TestCase
 
+.. |pyt| replace:: pytest
+.. _pyt: https://docs.pytest.org/en/stable/contents.html
+
 .. _repated_test:
 
 *************
@@ -156,9 +159,7 @@ You can run a ``repeated_test`` test case like any other |tc|_ class:
     # To refer to an individual test, prefix the name of the fixture with "test_"
     python -m unittest my_test_module.my_fixtures.test_Ps
 
-.. seealso::
-
-    `Official |ut| docs <https://docs.python.org/3/library/unittest.html#command-line-interface>`_
+Learn more in the `official |ut| docs <https://docs.python.org/3/library/unittest.html#command-line-interface>`_.
 
 You can also use a |ut|-compatible test runer, like |pyt|_:
 
@@ -170,9 +171,7 @@ You can also use a |ut|-compatible test runer, like |pyt|_:
     python -m pytest my_test_module.py -k test_Ps
     python -m pytest my_test_module.py::my_fixtures::test_Ps
 
-.. seealso::
-
-    `Official pytest docs <https://docs.pytest.org/en/stable/how-to/usage.html>`_
+Learn more in the `official pytest docs <https://docs.pytest.org/en/stable/how-to/usage.html>`_
 
 .. _options:
 
