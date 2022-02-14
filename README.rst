@@ -159,7 +159,7 @@ You can run a ``repeated_test`` test case like any other |tc|_ class:
     # To refer to an individual test, prefix the name of the fixture with "test_"
     python -m unittest my_test_module.my_fixtures.test_Ps
 
-Learn more in the `official |ut| docs <https://docs.python.org/3/library/unittest.html#command-line-interface>`_.
+Learn more in the `official unittest docs <https://docs.python.org/3/library/unittest.html#command-line-interface>`_.
 
 You can also use a |ut|-compatible test runer, like |pyt|_:
 
