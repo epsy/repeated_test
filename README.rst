@@ -4,6 +4,9 @@
 .. |tc| replace:: unittest.TestCase
 .. _tc: http://docs.python.org/3/library/unittest.html#unittest.TestCase
 
+.. |pyt| replace:: pytest
+.. _pyt: https://docs.pytest.org/en/stable/contents.html
+
 .. _repated_test:
 
 *************
@@ -18,7 +21,7 @@ repeated_test
 .. image:: https://coveralls.io/repos/github/epsy/repeated_test/badge.svg?branch=master
     :target: https://coveralls.io/github/epsy/repeated_test?branch=master
 
-``repeated_test`` lets you nicely write tests that apply the same function to
+``repeated_test`` lets you write tests that apply the same function to
 many sets of parameters.
 
 
@@ -92,15 +95,15 @@ Introduction
 ------------
 
 Python's |ut|_ modules helps in performing various forms of automated testing.
-One writes a class deriving from |tc|_ and adds various ``test_xyz`` methods,
-and test runners run these tests, keeping count of succesful tests, failed
-tests and produces a trace of the causes of these failures.
+One writes a class deriving from |tc|_ and adds various ``test_xyz`` methods.
+Test runners run these tests, keeping count of succesful and failed tests,
+and produces a trace with the causes of these failures.
 
 Sometimes it makes sense to have one test be carried out for a large amount
-of different inputs. This module aims to provide an efficient way to deal with
-such situations.
+of different inputs.
+This module aims to provide an efficient way to do this.
 
-It does so by allowing you to write fixtures (inputs) as plain members of a
+It allows you to write fixtures (inputs) as plain members of a
 class, and bind a test function to them. This test function is called for each
 fixture as you will see below. The produced class is a |tc|_ subclass, so it is
 compatible with |ut|_ and other |ut|-compatible test runners.
@@ -117,7 +120,7 @@ In order to produce a |tc|_, ``repeated_test`` requires you to:
 * Write a ``_test`` method that takes a few parameters, making use of any
   |tc|_ method it needs
 * Assign fixtures directly in the class body, which are then unpacked as
-  arguments to the ``_test`` method
+  arguments to the ``_test`` method (as in ``_test(*args)``)
 
 You can use any |tc|_ methods in your test function, such as ``assertEqual()``
 and so forth.
@@ -139,6 +142,67 @@ and so forth.
 Make sure that your fixture tuples provide the correct amount of arguments
 for your ``_test`` method, unless it has an ``*args`` parameter.
 
+
+.. _running:
+
+Running a test case
+-------------------
+
+You can run a ``repeated_test`` test case like any other |tc|_ class:
+
+.. code-block:: shell
+
+    python -m unittest
+    python -m unittest my_test_module
+    python -m unittest my_test_module.my_fixtures
+
+    # To refer to an individual test, prefix the name of the fixture with "test_"
+    python -m unittest my_test_module.my_fixtures.test_Ps
+
+Learn more in the `official unittest docs <https://docs.python.org/3/library/unittest.html#command-line-interface>`_.
+
+You can also use a |ut|-compatible test runer, like |pyt|_:
+
+.. code-block:: shell
+
+    python -m pytest
+    python -m pytest my_test_module.py
+    python -m pytest my_test_module.py -k my_fixtures
+    python -m pytest my_test_module.py -k test_Ps
+    python -m pytest my_test_module.py::my_fixtures::test_Ps
+
+Learn more in the `official pytest docs <https://docs.pytest.org/en/stable/how-to/usage.html>`_
+
+.. _options:
+
+Passing in keyword arguments
+----------------------------
+
+You can pass in keyword arguments using `repeated_test.options`:
+
+.. code-block:: python
+
+    import sys
+
+    from repeated_test import Fixtures, options
+
+    class my_fixtures(Fixtures):
+        def _test(self, arg1, arg2, *, min_version=None, max_version=None):
+            ...
+
+        not_using_versions = "abc", "abc"
+        # -> _test("abc", "abc")
+
+        using_max_version = "abc", "abc", options(max_version=(3, 9))
+        # -> _test("abc", "abc", max_version=(3, 9))
+
+        using_both_versions = "abc", "abc", options(min_version=(3, 8), max_version=(3, 9))
+        # -> _test("abc", "abc", min_version=(3, 8), max_version=(3, 9))
+
+        using_both_versions_2 = "abc", "abc", options(min_version=(3, 8)), options(max_version=(3, 9))
+        # Same, but by specifying options separately
+
+This can be useful if you have multiple options that are only used some of the time.
 
 .. _naming:
 .. _escaping:

@@ -3,8 +3,8 @@
 # COPYING for details.
 
 from repeated_test.core import Fixtures, WithTestClass
-from repeated_test.utils import tup
+from repeated_test.utils import tup, options
 
 __all__ = [
-    'Fixtures', 'WithTestClass', 'tup',
+    'Fixtures', 'WithTestClass', 'tup', "options"
     ]

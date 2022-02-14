@@ -10,6 +10,7 @@ import unittest
 import six
 import collections
 
+from repeated_test.utils import options
 
 try:
     abc = collections.abc
@@ -112,8 +113,9 @@ def WithTestClass(cls):
 def _make_testfunc_runner(value, fake_loc,
                           container_loc, cls_name, member_name):
     def _run_test(self):
+        args, kwargs = options.split_into_args_kwargs(value)
         try:
-            return self._test(*value)
+            return self._test(*args, **kwargs)
         except Exception as exc:
             typ, exc, tb = sys.exc_info()
             _raise_at_custom_line(

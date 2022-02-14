@@ -9,3 +9,18 @@ def _tup(args, func):
 
 def tup(*args):
     return partial(_tup, args)
+
+class options:
+    def __init__(self, **kwargs) -> None:
+        self.kwargs = kwargs
+
+    @classmethod
+    def split_into_args_kwargs(cls, args_and_options):
+        args = []
+        kwargs = {}
+        for arg in args_and_options:
+            if isinstance(arg, cls):
+                kwargs.update(arg.kwargs)
+            else:
+                args.append(arg)
+        return args, kwargs
