@@ -38,6 +38,7 @@ jobs:
           --outdir dist/
 
       - name: Publish to TestPyPI
+        if: ${{ github.event.action != 'published' }}
         uses: pypa/gh-action-pypi-publish@717ba43cfbb0387f6ce311b169a825772f54d295
         with:
           repository_url: https://test.pypi.org/legacy/
