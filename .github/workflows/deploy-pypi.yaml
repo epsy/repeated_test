@@ -3,7 +3,7 @@ name: Publish Python package to PyPI
 on:
   push:
     tags:
-      - releases/*
+      - v[0-9]*
   release:
     types:
       - published
