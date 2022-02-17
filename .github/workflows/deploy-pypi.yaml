@@ -1,10 +1,11 @@
 name: Publish Python package to PyPI
 
 on:
+  push:
+    tags:
+      - releases/*
   release:
     types:
-      - created
-      - edited
       - published
 
 jobs:
