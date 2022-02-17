@@ -119,7 +119,6 @@ class RepeatedTestTests(unittest.TestCase):
                 result = operation(terms)
                 if modulo is not None:
                     result = result % modulo
-                print(expected_result, result, terms, operation, modulo)
                 self.assertEqual(expected_result, result)
 
             not_using_options = 5, 2, 3
