@@ -24,3 +24,14 @@ class options:
             else:
                 args.append(arg)
         return args, kwargs
+
+def with_options(**kwargs):
+    return with_options_matrix(**{
+        key: [value]
+        for key, value in kwargs.items()
+    })
+
+def with_options_matrix(**kwargs):
+    def wrap_class(cls):
+        return cls.update(options_matrix=kwargs)
+    return wrap_class
