@@ -4,7 +4,6 @@
 
 import itertools
 import sys
-import re
 import traceback
 import unittest
 
@@ -13,16 +12,11 @@ import collections
 
 from repeated_test.utils import options
 
-try:
-    abc = collections.abc
-except AttributeError:
-    abc = collections
-
 
 __unittest = True # hides frames from this file from unittest output
 
 
-class FixturesDict(abc.MutableMapping):
+class FixturesDict(collections.abc.MutableMapping):
     def __init__(self, *args, **kwargs):
         self.d = {}
         self.lines = {}
@@ -126,7 +120,8 @@ class FixturesMeta(type):
         return cls.update(options_matrix=options_matrix)
 
 
-Fixtures = six.with_metaclass(FixturesMeta)
+class Fixtures(metaclass=FixturesMeta):
+    _test = None
 
 
 def WithTestClass(cls):
@@ -173,25 +168,9 @@ def _make_testfunc_runner(value, fake_loc,
             return self._test(*args, **kwargs)
         except Exception as exc:
             typ, exc, tb = sys.exc_info()
-            _raise_at_custom_line(
-                *get_loc(fake_loc, container_loc, cls_name, member_name)
-                )(typ, exc, tb.tb_next)
+            _raise_at_custom_line(*fake_loc)(typ, exc, tb.tb_next)
 
     return _run_test_matrix
-
-
-def get_loc(fake_loc, cls_loc, cls_name, member_name):
-    if fake_loc is not None:
-        return fake_loc
-    cls_filename, cls_lineno, cls_funcname = cls_loc
-    lines = list(open(cls_filename))
-    esc = re.escape(member_name)
-    pat = re.compile(r"^\s*(" + esc + r"\s*=|def\s+" + esc + r"\s*\()")
-    for i, line in enumerate(lines[cls_lineno:], cls_lineno+1):
-        if pat.match(line):
-            return cls_filename, i, cls_name
-    else:
-        return cls_loc
 
 
 def _raise_at_custom_line(filename, lineno, funcname):
@@ -204,9 +183,4 @@ def _raise_at_custom_line(filename, lineno, funcname):
 
 def _make_raiser(lineno, funcname):
     padding = '\n'*(lineno-1) + 'def '+funcname+'(typ, exc, tb):'
-    if sys.version_info < (3,):
-        return (
-            padding + 'other(typ, exc, tb)\n'
-            'def other(typ, exc, tb):raise typ, exc, tb')
-    else:
-        return padding+'raise exc.with_traceback(tb)'
+    return padding+'raise exc.with_traceback(tb)'
