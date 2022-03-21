@@ -153,7 +153,7 @@ def _make_testfunc_runner(value, fake_loc,
         first_two = list(itertools.islice(product, 2))
 
         if len(first_two) == 0:
-            raise ValueError(f"Some options have no values")
+            raise ValueError("Some options have no values")
         if len(first_two) == 1:
             return _run_test(self, args, dict(
                 first_two[0] or {},
