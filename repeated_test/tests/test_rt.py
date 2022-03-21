@@ -2,14 +2,13 @@
 # Copyright (C) 2011-2022 by Yann Kaiser and contributors. See AUTHORS and
 # COPYING for details.
 
+import io
 import sys
-import inspect
-from types import TracebackType
-from typing import Optional
 import unittest
 
 
 from repeated_test import Fixtures, WithTestClass, tup, core, options
+from repeated_test.utils import with_options, with_options_matrix
 
 
 skip_noprepare = unittest.skipIf(
@@ -17,15 +16,15 @@ skip_noprepare = unittest.skipIf(
     "Py version lacks custom class dict support")
 
 
-def get_tb_funcs_lines(tb: Optional[TracebackType]):
-    tb_funcs = []
-    tb_lines = []
-    while tb is not None:
-        fi = inspect.getframeinfo(tb)
-        tb_funcs.append(fi.function)
-        tb_lines.append(fi.code_context)
-        tb = tb.tb_next
-    return tb_funcs, tb_lines
+def stream_for_unittest():
+    return unittest.runner._WritelnDecorator(io.StringIO())
+
+
+def indent(text: str, indent='    '):
+    return ''.join(
+        f'{indent}{line}'
+        for line in text.splitlines(keepends=True)
+    )
 
 
 class RepeatedTestTests(unittest.TestCase):
@@ -47,13 +46,40 @@ class RepeatedTestTests(unittest.TestCase):
         with self.subTest(name):
             self.run_test_without_subtest(fixture, name, **kwargs)
 
-    def run_test_without_subtest(self, fixture, name, *, raises=None):
+    def run_test_without_subtest(self, fixture, name, *, raises=None, failures_contain=[], errors_contain=[]):
         tc = fixture(methodName=name)
-        if raises is not None:
-            with self.assertRaises(raises):
-                getattr(tc, name)()
+        stream = stream_for_unittest()
+        tr = unittest.TextTestResult(stream=stream, descriptions=True, verbosity=1)
+        tc.run(tr)
+
+        failures = '\n'.join(
+            f"{test}\n{indent(stack_trace)}"
+            for test, stack_trace in tr.failures
+        )
+        for text in failures_contain:
+            self.assertIn(text, failures)
+        errors = '\n'.join(
+            f"{test}\n{indent(stack_trace)}"
+            for test, stack_trace in tr.errors
+        )
+        for text in errors_contain:
+            self.assertIn(text, errors)
+
+        if raises is AssertionError:
+            self.assertNotEqual(len(tr.failures), 0, "Expected failures but got none")
+        elif raises is not None:
+            self.assertNotEqual(len(tr.errors), 0, "Expected errors but got none")
+            self.assertIn(
+                raises.__name__,
+                '\n'.join(
+                    stack_trace
+                    for _, stack_trace in tr.errors
+                ),
+            )
         else:
-            getattr(tc, name)()
+            self.assertEqual(tr.testsRun, 1, "Expected one test to be run")
+            self.assertEqual(len(tr.failures), 0, f"Expected no failures, but got:\n\n{indent(failures)}")
+            self.assertEqual(len(tr.errors), 0, f"Expected no errors, but got:\n\n{indent(errors)}")
 
     def test_success(self):
         self.run_test(self.sum_tests, 'test_a')
@@ -154,6 +180,85 @@ class RepeatedTestTests(unittest.TestCase):
         self.run_test(option_tests, "test_missing_kwoarg", raises=TypeError)
         self.run_test(option_tests, "test_duplicate_argument", raises=TypeError)
 
+    def test_with_options(self):
+        @with_options(add=1, expected=3)
+        class with_options_tests(Fixtures):
+            def _test(self, a, *, add, expected):
+                self.assertEqual(a + add, expected)
+            plus_one = 1,
+            plus_two = 2,
+        with_options_tests_changed = with_options(add=2)(with_options_tests)
+
+        self.run_test(with_options_tests, "test_plus_one", raises=AssertionError)
+        self.run_test(with_options_tests, "test_plus_two")
+        self.run_test(with_options_tests_changed, "test_plus_one")
+        self.run_test(with_options_tests_changed, "test_plus_two", raises=AssertionError)
+
+    def test_options_matrix(self):
+        @with_options_matrix(
+            pair=[(3,7), (4,6)],
+            inverse=[False],
+        )
+        class commutativity(Fixtures):
+            def _test(self, operation, *, pair, inverse):
+                if inverse:
+                    self.assertEqual(operation(*pair), 1 / operation(*reversed(pair)))
+                else:
+                    self.assertEqual(operation(*pair), operation(*reversed(pair)))
+
+            @tup()
+            def sum(a, b):
+                return a + b
+
+            @tup()
+            def mul(a, b):
+                return a * b
+
+            @tup()
+            def div(a, b):
+                return a / b
+
+        commutativity_inverse = commutativity.with_options_matrix(inverse=[True])
+
+        self.run_test(commutativity, "test_sum")
+        self.run_test(commutativity, "test_mul")
+        self.run_test(commutativity, "test_div", raises=AssertionError, failures_contain=["pair=(3, 7)", "pair=(4, 6)"])
+        self.run_test(commutativity_inverse, "test_sum", raises=AssertionError, failures_contain=["pair=(3, 7)", "pair=(4, 6)"])
+        self.run_test(commutativity_inverse, "test_mul", raises=AssertionError, failures_contain=["pair=(3, 7)", "pair=(4, 6)"])
+        self.run_test(commutativity_inverse, "test_div")
+
+    def test_options_matrix_inheritance(self):
+        @with_options_matrix(
+            suffix1=["x", "x"],
+        )
+        class superclass(Fixtures):
+            def _test(self, s, expected, *, suffix1):
+                self.assertEqual(s + suffix1, expected)
+
+            a = "a", "ax"
+            b = "b", "bxy"
+
+        @with_options_matrix(
+            suffix2=["y", "y"],
+        )
+        class subclass(superclass):
+            def _test(self, s, expected, *, suffix1, suffix2):
+                self.assertEqual(s + suffix1 + suffix2, expected)
+
+        self.run_test(superclass, "test_a")
+        self.run_test(superclass, "test_b", raises=AssertionError, failures_contain=["suffix1='x'"])
+        self.run_test(subclass, "test_a", raises=AssertionError, failures_contain=["suffix1='x'", "suffix2='y'"])
+        self.run_test(subclass, "test_b")
+
+    def test_options_empty(self):
+        @with_options_matrix(
+            arg=[]
+        )
+        class my_test(Fixtures):
+            def _test(self, *, arg):
+                raise NotImplementedError
+            a = ()
+        self.run_test(my_test, 'test_a', raises=ValueError, errors_contain=["no values"])
 
     def test_missing_test(self):
         with self.assertRaises(ValueError,
@@ -162,22 +267,10 @@ class RepeatedTestTests(unittest.TestCase):
                 a = 1, 2, 3
                 b = 4, 5, 6
 
-    def assert_tb(self, fixture, name, func, line, *,  raises=AssertionError):
-        with self.subTest(name):
-            try:
-                self.run_test_without_subtest(fixture, name)
-            except raises:
-                _, _, tb = sys.exc_info()
-            else:
-                raise AssertionError(f"Expected {raises.__name__} to be raised")
-            tb_funcs, tb_lines = get_tb_funcs_lines(tb)
-            self.assertIn(func, tb_funcs)
-            self.assertIn([f"            {line}\n"], tb_lines)
-
     def test_line(self):
-        self.assert_tb(self.sum_tests, "test_c", "sum_tests", "c = 15, 5, 3")
-        self.assert_tb(self.sum_tests, "test_optional_failure", "sum_tests", "optional_failure = 1, 3, 2, options(optional=1)")
-        self.assert_tb(self.sum_tests, "test_optional_badargs", "sum_tests", "optional_badargs = 3, 2, 1, options(doesntexist=1)", raises=TypeError)
+        self.run_test(self.sum_tests, "test_c", raises=AssertionError, failures_contain=["sum_tests", "c = 15, 5, 3"])
+        self.run_test(self.sum_tests, "test_optional_failure", raises=AssertionError, failures_contain=["sum_tests", "optional_failure = 1, 3, 2, options(optional=1)"])
+        self.run_test(self.sum_tests, "test_optional_badargs", raises=TypeError, errors_contain=["sum_tests", "optional_badargs = 3, 2, 1, options(doesntexist=1)"])
 
     def test_func_location(self):
         class func_tests(Fixtures):
@@ -188,23 +281,13 @@ class RepeatedTestTests(unittest.TestCase):
             def one():
                 pass # pragma: no cover
         try:
-            self.run_test_without_subtest(func_tests, "test_one")
-        except AssertionError:
-            _, _, tb = sys.exc_info()
-        else:
-            raise AssertionError("Expected AssertionError")
-        tb_funcs = []
-        tb_lines = []
-        while tb is not None:
-            fi = inspect.getframeinfo(tb)
-            tb_funcs.append(fi.function)
-            tb_lines.append(fi.code_context)
-            tb = tb.tb_next
-        self.assertIn("func_tests", tb_funcs)
-        try:
-            self.assertIn(['            @tup("one", "params")\n'], tb_lines)
-        except AssertionError:
-            self.assertIn(['            def one():\n'], tb_lines)
+            self.run_test_without_subtest(func_tests, "test_one", raises=AssertionError, 
+                failures_contain=["def one():"]
+            )
+        except AssertionError: # < py38
+            self.run_test_without_subtest(func_tests, "test_one", raises=AssertionError, 
+                failures_contain=['@tup("one", "params")'],
+            )
 
     def test_relocate_frame_chevrons(self):
         f = core._raise_at_custom_line("mymodule.py", 123, "<module>")
