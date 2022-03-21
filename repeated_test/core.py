@@ -4,7 +4,6 @@
 
 import itertools
 import sys
-import re
 import traceback
 import unittest
 
