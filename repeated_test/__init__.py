@@ -3,9 +3,9 @@
 # COPYING for details.
 
 from repeated_test.core import Fixtures, WithTestClass
-from repeated_test.utils import tup, options, with_options, with_options_matrix
+from repeated_test.utils import tup, options, with_options, with_options_matrix, skip_option
 
 __all__ = [
     'Fixtures', 'WithTestClass', 'tup',
-    "options", "with_options", "with_options_matrix",
+    "options", "with_options", "with_options_matrix", "skip_option"
     ]

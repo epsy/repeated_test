@@ -7,8 +7,7 @@ import sys
 import unittest
 
 
-from repeated_test import Fixtures, WithTestClass, tup, core, options
-from repeated_test.utils import with_options, with_options_matrix
+from repeated_test import Fixtures, WithTestClass, tup, core, options, skip_option, with_options, with_options_matrix
 
 
 skip_noprepare = unittest.skipIf(
@@ -249,6 +248,32 @@ class RepeatedTestTests(unittest.TestCase):
         self.run_test(superclass, "test_b", raises=AssertionError, failures_contain=["suffix1='x'"])
         self.run_test(subclass, "test_a", raises=AssertionError, failures_contain=["suffix1='x'", "suffix2='y'"])
         self.run_test(subclass, "test_b")
+
+    def test_skip_option(self):
+        @with_options_matrix(
+            suffix=["x", "x"]
+        )
+        class superclass(Fixtures):
+            def _test(self, s, expected, *, suffix="default"):
+                self.assertEqual(s + suffix, expected)
+
+            a = "a", "ax"
+            b = "b", "bdefault", options(suffix=skip_option)
+
+        @with_options(
+            suffix=skip_option
+        )
+        class subclass(superclass):
+            def _test(self, s, expected): # no "suffix" parameter
+                self.assertEqual(s, expected)
+
+            c = "c", "c"
+
+        self.run_test(superclass, "test_a")
+        self.run_test(superclass, "test_b")
+        self.run_test(subclass, "test_c")
+        self.assertEqual(str(skip_option), "<skip option>")
+        self.assertEqual(repr(skip_option), "<skip option>")
 
     def test_options_empty(self):
         @with_options_matrix(

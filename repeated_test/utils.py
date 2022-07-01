@@ -25,6 +25,12 @@ class options:
                 args.append(arg)
         return args, kwargs
 
+class _SkipOption:
+    def __repr__(self):
+        return "<skip option>"
+
+skip_option = _SkipOption()
+
 def with_options(**kwargs):
     return with_options_matrix(**{
         key: [value]
@@ -35,3 +41,10 @@ def with_options_matrix(**kwargs):
     def wrap_class(cls):
         return cls.update(options_matrix=kwargs)
     return wrap_class
+
+def filter_skips(d):
+    return {
+        k: v
+        for k, v in d.items()
+        if v is not skip_option
+    }
