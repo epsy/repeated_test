@@ -10,7 +10,7 @@ import unittest
 import six
 import collections
 
-from repeated_test.utils import options
+from repeated_test.utils import options, filter_skips
 
 
 __unittest = True # hides frames from this file from unittest output
@@ -150,18 +150,18 @@ def _make_testfunc_runner(value, fake_loc,
         if len(first_two) == 0:
             raise ValueError("Some options have no values")
         if len(first_two) == 1:
-            return _run_test(self, args, dict(
+            return _run_test(self, args, filter_skips(dict(
                 first_two[0] or {},
                 **kwargs,
-            ))
+            )))
         else:
             for kv_pairs in itertools.chain(first_two, product):
                 combination = dict(kv_pairs)
                 with self.subTest(**combination):
-                    _run_test(self, args, {
+                    _run_test(self, args, filter_skips({
                         **combination,
                         **kwargs,
-                    })
+                    }))
 
     def _run_test(self, args, kwargs):
         try:
