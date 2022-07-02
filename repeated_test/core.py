@@ -40,6 +40,7 @@ class FixturesDict(collections.abc.MutableMapping):
                 if 'test_' + key in self.d:
                     raise ValueError(
                         "Fixture conflicts with plain test: " + key)
+                value = options.get_active_options() + tuple(value)
         self.lines[key] = traceback.extract_stack(sys._getframe(1), 1)[0][:3]
         self.d[key] = value
 
