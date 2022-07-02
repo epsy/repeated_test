@@ -14,6 +14,8 @@ class options:
     def __init__(self, **kwargs) -> None:
         self.kwargs = kwargs
 
+    __ACTIVE_OPTIONS = []
+
     @classmethod
     def split_into_args_kwargs(cls, args_and_options):
         args = []
@@ -24,6 +26,16 @@ class options:
             else:
                 args.append(arg)
         return args, kwargs
+
+    @classmethod
+    def get_active_options(cls):
+        return tuple(cls.__ACTIVE_OPTIONS)
+
+    def __enter__(self):
+        type(self).__ACTIVE_OPTIONS.append(self)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        type(self).__ACTIVE_OPTIONS.pop()
 
 class _SkipOption:
     def __repr__(self):

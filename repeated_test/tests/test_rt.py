@@ -179,6 +179,31 @@ class RepeatedTestTests(unittest.TestCase):
         self.run_test(option_tests, "test_missing_kwoarg", raises=TypeError)
         self.run_test(option_tests, "test_duplicate_argument", raises=TypeError)
 
+    def test_options_contextmanager(self):
+        class option_cm_test(Fixtures):
+            def _test(self, a, b, *, c="", expected):
+                self.assertEqual(expected, a + b + c)
+
+            with options(expected="abc"):
+                one_context_fail = "a", "b"
+                one_context_good = "a", "bc"
+
+                with options(c="c"):
+                    two_contexts_good = "a", "b"
+                    two_contexts_fail = "a", "bc"
+                    two_contexts_and_override = "a", "bc", options(expected="abcc")
+
+                after_inner_context_exit = "ab", "c"
+            after_all_context_exit = "a", "b"
+
+        self.run_test(option_cm_test, "test_one_context_fail", raises=AssertionError)
+        self.run_test(option_cm_test, "test_one_context_good")
+        self.run_test(option_cm_test, "test_two_contexts_good")
+        self.run_test(option_cm_test, "test_two_contexts_fail", raises=AssertionError)
+        self.run_test(option_cm_test, "test_two_contexts_and_override")
+        self.run_test(option_cm_test, "test_after_inner_context_exit")
+        self.run_test(option_cm_test, "test_after_all_context_exit", raises=TypeError)
+
     def test_with_options(self):
         @with_options(add=1, expected=3)
         class with_options_tests(Fixtures):
@@ -322,15 +347,15 @@ class RepeatedTestTests(unittest.TestCase):
     def test_dup(self):
         with self.assertRaises(ValueError):
             class fail_tests(Fixtures):
-                a = 1
-                a = 2
+                a = 1,
+                a = 2,
 
     @skip_noprepare
     def test_dup_with(self):
         with self.assertRaises(ValueError):
             class fail_tests(WithTestClass(unittest.TestCase)):
-                a = 1
-                a = 2
+                a = 1,
+                a = 2,
 
     @skip_noprepare
     def test_dup_ok(self):
