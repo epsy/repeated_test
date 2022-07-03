@@ -4,10 +4,16 @@
 .. |tc| replace:: unittest.TestCase
 .. _tc: http://docs.python.org/3/library/unittest.html#unittest.TestCase
 
+.. |subtests| replace:: subtests
+.. _subtests: https://docs.python.org/3/library/unittest.html#subtests
+
 .. |pyt| replace:: pytest
 .. _pyt: https://docs.pytest.org/en/stable/contents.html
 
-.. _repated_test:
+.. |pytest-subtests| replace:: pytest-subtests
+.. _pytest-subtests: https://pypi.org/project/pytest-subtests/
+
+.. _repeated_test:
 
 *************
 repeated_test
@@ -33,7 +39,7 @@ For instance:
 
     from repeated_test import Fixtures
 
-    class my_fixtures(Fixtures):
+    class MyFixtures(Fixtures):
         def _test(self, expected, *terms):
             self.assertEqual(expected, sum(terms))
 
@@ -49,10 +55,10 @@ traceback in case of errors:
     $ python -m unittest my_tests
     ..F
     ======================================================================
-    FAIL: test_c (my_tests.my_fixtures)
+    FAIL: test_c (my_tests.MyFixtures)
     ----------------------------------------------------------------------
     Traceback (most recent call last):
-      File "my_tests.py", line 9, in my_fixtures
+      File "my_tests.py", line 9, in MyFixtures
         c = 42, 1, 1
       File "my_tests.py", line 5, in _test
         self.assertEqual(expected, sum(terms))
@@ -129,7 +135,7 @@ and so forth.
 
     from repeated_test import Fixtures
 
-    class my_fixtures(Fixtures):
+    class MyFixtures(Fixtures):
         def _test(self, arg1, arg2, arg3):
             self.assertEqual(..., ...)
 
@@ -154,10 +160,10 @@ You can run a ``repeated_test`` test case like any other |tc|_ class:
 
     python -m unittest
     python -m unittest my_test_module
-    python -m unittest my_test_module.my_fixtures
+    python -m unittest my_test_module.MyFixtures
 
     # To refer to an individual test, prefix the name of the fixture with "test_"
-    python -m unittest my_test_module.my_fixtures.test_Ps
+    python -m unittest my_test_module.MyFixtures.test_Ps
 
 Learn more in the `official unittest docs <https://docs.python.org/3/library/unittest.html#command-line-interface>`_.
 
@@ -167,9 +173,9 @@ You can also use a |ut|-compatible test runer, like |pyt|_:
 
     python -m pytest
     python -m pytest my_test_module.py
-    python -m pytest my_test_module.py -k my_fixtures
+    python -m pytest my_test_module.py -k MyFixtures
     python -m pytest my_test_module.py -k test_Ps
-    python -m pytest my_test_module.py::my_fixtures::test_Ps
+    python -m pytest my_test_module.py::MyFixtures::test_Ps
 
 Learn more in the `official pytest docs <https://docs.pytest.org/en/stable/how-to/usage.html>`_
 
@@ -178,7 +184,7 @@ Learn more in the `official pytest docs <https://docs.pytest.org/en/stable/how-t
 Passing in keyword arguments
 ----------------------------
 
-You can pass in keyword arguments using `repeated_test.options`:
+You can pass in keyword arguments using ``repeated_test.options``:
 
 .. code-block:: python
 
@@ -186,7 +192,7 @@ You can pass in keyword arguments using `repeated_test.options`:
 
     from repeated_test import Fixtures, options
 
-    class my_fixtures(Fixtures):
+    class MyFixtures(Fixtures):
         def _test(self, arg1, arg2, *, min_version=None, max_version=None):
             ...
 
@@ -203,6 +209,102 @@ You can pass in keyword arguments using `repeated_test.options`:
         # Same, but by specifying options separately
 
 This can be useful if you have multiple options that are only used some of the time.
+
+.. _manage-options:
+
+Passing in keyword arguments to multiple tests
+----------------------------------------------
+
+If you are re-using the same keyword arguments across multiple tests,
+there are several ways to do so:
+
+- Using ``@repeated_test.with_options(...)`` lets you
+  specify options for every fixture within a class.
+- Using ``with repeated_test.options(...)`` lets you
+  specify options for every fixture within the ``with`` block.
+- You can continue using ``options()`` on individual fixtures,
+  and override values provided by surrounding code.
+
+.. code-block:: python
+
+    from repeated_test import Fixtures, options, with_options
+
+    @with_options(kwarg1="value from decorator")
+    class MyFixtures(Fixtures):
+        def _test(self, arg1, arg2, *, kwarg1, kwarg2="default"):
+            ...
+
+        using_provided_values = "arg1", "arg2"
+        # -> _test("arg1", "arg2", kwarg1="value from decorator", kwarg2="default")
+
+        overriding_provided_values = "arg1", "arg2", options(kwarg1="kwarg1", kwarg2="kwarg2")
+        # -> _test("arg1", "arg2", kwarg1="kwarg1", kwarg2="kwarg2")
+
+        with options(kwarg1="value from context manager"):
+            using_value_from_context_manager = "arg1", "arg2"
+            # -> _test("arg1", "arg2", kwarg1="value from context manager", kwarg2="default")
+
+            overriding_value_from_context_manager = "arg1", "arg2", options(kwarg1="kwarg1")
+            # -> _test("arg1", "arg2", kwarg1="kwarg1", kwarg2="default")
+
+.. _options-matrix:
+
+Testing multiple values for a keyword parameter
+-----------------------------------------------
+
+You can also use ``@with_options_matrix``
+to provide multiple values for a keyword parameter.
+``repeated_test`` will run every combination
+except for parameters that are overridden.
+
+.. code-block:: python
+
+    from repeated_test import Fixtures, options, with_options_matrix
+
+
+    @with_options_matrix(
+        spam=["spam1", "spam2"],
+        ham=["ham1", "ham2"],
+    )
+    class MyFixtures(Fixtures):
+        def _test(self, arg1, arg2, *, spam, ham):
+            ...
+
+        using_provided_values = "arg1", "arg2"
+        # -> _test("arg1", "arg2", spam="spam1", ham="ham1")
+        # -> _test("arg1", "arg2", spam="spam1", ham="ham2")
+        # -> _test("arg1", "arg2", spam="spam2", ham="ham1")
+        # -> _test("arg1", "arg2", spam="spam2", ham="ham2")
+
+        with options(spam="spam"):
+            overriding_one_value = "arg1", "arg2"
+            # -> _test("arg1", "arg2", spam="spam", ham="ham1")
+            # -> _test("arg1", "arg2", spam="spam", ham="ham2")
+
+``repeated_test`` will report each combination using unittest's |subtests|_ feature.
+|pyt| does not have this feature built-in, but the |pytest-subtests|_ plugin adds support.
+
+.. code-block:: console
+
+    ======================================================================
+    FAIL: test_overriding_one_value (example_options._test) (ham='ham1')
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/home/ykaiser/repeated_test/example_options.py", line 41, in MyFixtures
+        overriding_one_value = "arg1", "arg2"
+      File "/home/ykaiser/repeated_test/example_options.py", line 32, in _test
+        self.fail("example failure")
+    AssertionError: example failure
+
+    ======================================================================
+    FAIL: test_overriding_one_value (example_options._test) (ham='ham2')
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      File "/home/ykaiser/repeated_test/example_options.py", line 41, in MyFixtures
+        overriding_one_value = "arg1", "arg2"
+      File "/home/ykaiser/repeated_test/example_options.py", line 32, in _test
+        self.fail("example failure")
+    AssertionError: example failure
 
 .. _naming:
 .. _escaping:
@@ -227,7 +329,7 @@ to be treated as tests:
 
     from repeated_test import Fixtures
 
-    class my_fixtures(Fixtures):
+    class MyFixtures(Fixtures):
         def _test(self, arg1, arg2, arg3):
             self.assertEqual(..., ...)
 
@@ -252,11 +354,11 @@ You can apply a fixtures class to a different test function using its
 
 .. code-block:: python
 
-    class my_fixtures(Fixtures):
+    class MyFixtures(Fixtures):
         _test = None
         ...
 
-    @my_fixtures.with_test
+    @MyFixtures.with_test
     def other_test(self, arg1, arg2, arg3):
         self.assertEqual(..., ...)
 
