@@ -102,7 +102,7 @@ Introduction
 
 Python's |ut|_ modules helps in performing various forms of automated testing.
 One writes a class deriving from |tc|_ and adds various ``test_xyz`` methods.
-Test runners run these tests, keeping count of succesful and failed tests,
+Test runners run these tests, keeping count of successful and failed tests,
 and produces a trace with the causes of these failures.
 
 Sometimes it makes sense to have one test be carried out for a large amount
@@ -224,6 +224,10 @@ there are several ways to do so:
   specify options for every fixture within the ``with`` block.
 - You can continue using ``options()`` on individual fixtures,
   and override values provided by surrounding code.
+- You can use ``repeated_test.skip_option`` to stop supplying any argument.
+  The argument won't be supplied to the function,
+  which is useful for using a default value,
+  or for removing common options from a class whose test function doesn't handle
 
 .. code-block:: python
 
@@ -246,6 +250,12 @@ there are several ways to do so:
 
             overriding_value_from_context_manager = "arg1", "arg2", options(kwarg1="kwarg1")
             # -> _test("arg1", "arg2", kwarg1="kwarg1", kwarg2="default")
+
+        with options(kwarg2="value from context manager"):
+            removing_value = "arg1", "arg2"
+            # -> _test("arg1", "arg2", kwarg1="value from decorator", kwarg2="value from context manager")
+            removing_value = "arg1", "arg2", options(kwarg2=skip_option)
+            # -> _test("arg1", "arg2", kwarg1="value from decorator", kwarg2="default")
 
 .. _options-matrix:
 
