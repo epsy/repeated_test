@@ -193,6 +193,10 @@ class RepeatedTestTests(unittest.TestCase):
                     two_contexts_fail = "a", "bc"
                     two_contexts_and_override = "a", "bc", options(expected="abcc")
 
+                with options(expected="def"):
+                    context_override_good = "de", "f"
+                    context_override_fail = "ab", "c"
+
                 after_inner_context_exit = "ab", "c"
             after_all_context_exit = "a", "b"
 
@@ -201,6 +205,8 @@ class RepeatedTestTests(unittest.TestCase):
         self.run_test(option_cm_test, "test_two_contexts_good")
         self.run_test(option_cm_test, "test_two_contexts_fail", raises=AssertionError)
         self.run_test(option_cm_test, "test_two_contexts_and_override")
+        self.run_test(option_cm_test, "test_context_override_good")
+        self.run_test(option_cm_test, "test_context_override_fail", raises=AssertionError)
         self.run_test(option_cm_test, "test_after_inner_context_exit")
         self.run_test(option_cm_test, "test_after_all_context_exit", raises=TypeError)
 
