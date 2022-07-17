@@ -7,7 +7,7 @@ import sys
 import unittest
 
 
-from repeated_test import Fixtures, WithTestClass, tup, core, options, skip_option, with_options, with_options_matrix
+from repeated_test import Fixtures, WithTestClass, tup, core, options, skip_option, with_options, with_options_matrix, NamedAlternative
 
 
 skip_noprepare = unittest.skipIf(
@@ -223,6 +223,25 @@ class RepeatedTestTests(unittest.TestCase):
         self.run_test(with_options_tests, "test_plus_two")
         self.run_test(with_options_tests_changed, "test_plus_one")
         self.run_test(with_options_tests_changed, "test_plus_two", raises=AssertionError)
+
+    def test_with_named_alternative(self):
+        a_value = object()
+        @NamedAlternative("name for b")
+        def b_alternative():
+            raise NotImplementedError
+        @with_options_matrix(a=[NamedAlternative("name for a", a_value)], b=[b_alternative, b_alternative])
+        class named_alternatives(Fixtures):
+            def _test(self, should_succeed, *, a, b):
+                self.assertIs(a, a_value)
+                self.assertIs(b, b_alternative.value)
+                if not should_succeed:
+                    self.fail("example failure")
+
+            success_case = True,
+            failure_case = False,
+
+        self.run_test(named_alternatives, "test_success_case")
+        self.run_test(named_alternatives, "test_failure_case", raises=AssertionError, failures_contain=["name for a", "name for b"])
 
     def test_options_matrix(self):
         @with_options_matrix(
