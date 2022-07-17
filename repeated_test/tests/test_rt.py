@@ -430,6 +430,9 @@ class RepeatedTestTests(unittest.TestCase):
         self.run_test(evaluated_tests, "test_raises_during_test", raises=AssertionError, failures_contain=[
             'a_value=3',
         ])
+        self.run_test(evaluated_tests, "test_inserts_duplicate_option", raises=TypeError, errors_contain=[
+            "a_value=3", "a_value=13"
+        ])
         self.run_test(evaluated_tests, "test_inline_evaluation")
 
     @skip_noprepare
