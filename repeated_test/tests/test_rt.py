@@ -7,7 +7,7 @@ import sys
 import unittest
 
 
-from repeated_test import Fixtures, WithTestClass, tup, core, options, skip_option, with_options, with_options_matrix, NamedAlternative
+from repeated_test import Fixtures, WithTestClass, tup, core, options, skip_option, with_options, with_options_matrix, NamedAlternative, evaluated
 
 
 skip_noprepare = unittest.skipIf(
@@ -367,6 +367,73 @@ class RepeatedTestTests(unittest.TestCase):
     def test_relocate_frame_chevrons(self):
         f = core._raise_at_custom_line("mymodule.py", 123, "<module>")
         self.assertEqual(f.__name__, 'module')
+
+    def test_evaluated(self):
+        class evaluated_tests(Fixtures):
+            def _test(self, actual, expected):
+                self.assertEqual(actual, expected)
+
+            _a_value = 13
+
+            @evaluated
+            def a(self):
+                return self._a_value + 1, 14
+
+            b = 1, 1
+
+            c = evaluated(lambda *a, **k: (1,)), 1
+
+        self.run_test(evaluated_tests, "test_a")
+        self.run_test(evaluated_tests, "test_b")
+        self.run_test(evaluated_tests, "test_c")
+
+    def test_evaluated_options(self):
+        @with_options_matrix(a_value=[3, 13])
+        class evaluated_tests(Fixtures):
+            def _test(self, actual, expected, *, a_value, b_value=0):
+                self.assertEqual(actual + b_value, expected)
+
+            with options(a_value=13):
+                @evaluated
+                def a(self, *, a_value):
+                    return a_value + 1, 14
+
+                b = 1, 1
+
+            @evaluated
+            def raises_during_evaluation(self, *, a_value):
+                self.fail("example failure")
+
+            @evaluated
+            def raises_during_test(self, *, a_value):
+                return a_value + 1, 14
+
+            @evaluated
+            def inserts_option(self, *, a_value):
+                return 1, 3, options(b_value=2)
+
+            @evaluated
+            def inserts_duplicate_option(self, *, a_value):
+                return 1, 3, options(a_value=1)
+
+            inline_evaluation = evaluated(lambda *a, **k: (1, 3)), options(b_value=2)
+
+        self.run_test(evaluated_tests, "test_a")
+        self.run_test(evaluated_tests, "test_b")
+        self.run_test(evaluated_tests, "test_raises_during_evaluation", raises=AssertionError, failures_contain=[
+            'a_value=3', 'a_value=13'
+        ])
+        self.run_test(evaluated_tests, "test_raises_during_test", raises=AssertionError, failures_contain=[
+            'a_value=3'
+        ])
+        self.run_test(evaluated_tests, "test_inserts_option")
+        self.run_test(evaluated_tests, "test_raises_during_test", raises=AssertionError, failures_contain=[
+            'a_value=3',
+        ])
+        self.run_test(evaluated_tests, "test_inserts_duplicate_option", raises=TypeError, errors_contain=[
+            "a_value=3", "a_value=13"
+        ])
+        self.run_test(evaluated_tests, "test_inline_evaluation")
 
     @skip_noprepare
     def test_dup(self):

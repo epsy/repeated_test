@@ -11,6 +11,7 @@ import six
 import collections
 
 from repeated_test.utils import options, options_to_kwargs
+from repeated_test import _evaluated
 
 
 __unittest = True # hides frames from this file from unittest output
@@ -40,6 +41,8 @@ class FixturesDict(collections.abc.MutableMapping):
                 if 'test_' + key in self.d:
                     raise ValueError(
                         "Fixture conflicts with plain test: " + key)
+                if isinstance(value, _evaluated.Evaluated):
+                    value = value,
                 value = options.get_active_options() + tuple(value)
         self.lines[key] = traceback.extract_stack(sys._getframe(1), 1)[0][:3]
         self.d[key] = value
@@ -165,8 +168,10 @@ def _make_testfunc_runner(value, fake_loc,
                     }))
 
     def _run_test(self, args, kwargs):
+        evaluated = _evaluated.flatten_evaluated_items(self, args, kwargs)
+        args, kwargs_overrides = options.split_into_args_kwargs(evaluated)
         try:
-            return self._test(*args, **kwargs)
+            return self._test(*args, **kwargs, **kwargs_overrides)
         except Exception as exc:
             typ, exc, tb = sys.exc_info()
             _raise_at_custom_line(*fake_loc)(typ, exc, tb.tb_next)

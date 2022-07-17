@@ -4,8 +4,10 @@
 
 from repeated_test.core import Fixtures, WithTestClass
 from repeated_test.utils import tup, options, with_options, with_options_matrix, skip_option, NamedAlternative
+from repeated_test._evaluated import evaluated
 
 __all__ = [
     'Fixtures', 'WithTestClass', 'tup',
     "options", "with_options", "with_options_matrix", "skip_option", "NamedAlternative",
+    "evaluated",
     ]
