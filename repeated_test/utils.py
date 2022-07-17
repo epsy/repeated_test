@@ -54,9 +54,24 @@ def with_options_matrix(**kwargs):
         return cls.update(options_matrix=kwargs)
     return wrap_class
 
-def filter_skips(d):
+_unset = object()
+
+class NamedAlternative:
+    def __new__(cls, name, value=_unset):
+        if value is _unset:
+            return partial(NamedAlternative, name)
+        return super().__new__(cls)
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def __repr__(self):
+        return self.name
+
+def options_to_kwargs(d):
     return {
-        k: v
+        k: v.value if isinstance(v, NamedAlternative) else v
         for k, v in d.items()
         if v is not skip_option
     }
