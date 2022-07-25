@@ -387,6 +387,13 @@ class RepeatedTestTests(unittest.TestCase):
         self.run_test(evaluated_tests, "test_b")
         self.run_test(evaluated_tests, "test_c")
 
+    def test_evaluated_interface(self):
+        def func(arg):
+            return arg + 1
+        evaluated_func = evaluated(func)
+        self.assertEqual(evaluated_func(2), 3)
+        self.assertEqual(repr(evaluated_func), f"repeated_test.evaluated({func})")
+
     def test_evaluated_options(self):
         @with_options_matrix(a_value=[3, 13])
         class evaluated_tests(Fixtures):
