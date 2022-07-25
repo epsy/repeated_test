@@ -14,3 +14,9 @@ def flatten_evaluated_items(self, args, kwargs):
 class Evaluated:
     def __init__(self, func):
         self.func = func
+
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+    def __repr__(self):
+        return f'repeated_test.evaluated({self.func!r})'
