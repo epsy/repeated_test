@@ -105,9 +105,9 @@ class FixturesMeta(type):
         tc_cls = (cls._TestCase,) if cls.__dict__['_test'] is None else ()
         bases = tuple(b for b in cls.__bases__ if b is not object) + tc_cls
         members = dict(cls.__dict__)
+        name = func.__name__ if func else cls.__name__
         func = func or members.get('_test', None)
         members['_test'] = func
-        name = func.__name__ if func else cls.__name__
         original_options_matrix = members.get(OPTIONS_MATRIX_KEY, {})
         options_matrix = {
             **original_options_matrix,

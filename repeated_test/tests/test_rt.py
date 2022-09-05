@@ -271,9 +271,9 @@ class RepeatedTestTests(unittest.TestCase):
 
         self.run_test(commutativity, "test_sum")
         self.run_test(commutativity, "test_mul")
-        self.run_test(commutativity, "test_div", raises=AssertionError, failures_contain=["pair=(3, 7)", "pair=(4, 6)"])
-        self.run_test(commutativity_inverse, "test_sum", raises=AssertionError, failures_contain=["pair=(3, 7)", "pair=(4, 6)"])
-        self.run_test(commutativity_inverse, "test_mul", raises=AssertionError, failures_contain=["pair=(3, 7)", "pair=(4, 6)"])
+        self.run_test(commutativity, "test_div", raises=AssertionError, failures_contain=["commutativity", "pair=(3, 7)", "pair=(4, 6)"])
+        self.run_test(commutativity_inverse, "test_sum", raises=AssertionError, failures_contain=["commutativity", "pair=(3, 7)", "pair=(4, 6)"])
+        self.run_test(commutativity_inverse, "test_mul", raises=AssertionError, failures_contain=["commutativity", "pair=(3, 7)", "pair=(4, 6)"])
         self.run_test(commutativity_inverse, "test_div")
 
     def test_options_matrix_inheritance(self):
@@ -295,8 +295,8 @@ class RepeatedTestTests(unittest.TestCase):
                 self.assertEqual(s + suffix1 + suffix2, expected)
 
         self.run_test(superclass, "test_a")
-        self.run_test(superclass, "test_b", raises=AssertionError, failures_contain=["suffix1='x'"])
-        self.run_test(subclass, "test_a", raises=AssertionError, failures_contain=["suffix1='x'", "suffix2='y'"])
+        self.run_test(superclass, "test_b", raises=AssertionError, failures_contain=["superclass", "suffix1='x'"])
+        self.run_test(subclass, "test_a", raises=AssertionError, failures_contain=["subclass", "suffix1='x'", "suffix2='y'"])
         self.run_test(subclass, "test_b")
 
     def test_skip_option(self):
