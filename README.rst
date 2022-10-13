@@ -352,7 +352,7 @@ The wrapped function will also receive options as keyword arguments:
 
 .. code-block:: python
 
-    from repeated_test import Fixtures, evaluated
+    from repeated_test import Fixtures, evaluated, with_options_matrix
 
     @with_options_matrix(
         option=[
@@ -386,6 +386,8 @@ which can end up showing as something like
 You can use ``NamedAlternative`` to give them a name:
 
 .. code-block:: python
+
+    from repeated_test import NamedAlternative
 
     value1 = NamedAlternative("name for value1", "value1")
 
