@@ -7,7 +7,6 @@ import sys
 import traceback
 import unittest
 
-import six
 import collections
 
 from repeated_test.utils import options, options_to_kwargs
@@ -182,7 +181,7 @@ def _make_testfunc_runner(value, fake_loc,
 def _raise_at_custom_line(filename, lineno, funcname):
     funcname = funcname.strip('<>')
     d = {}
-    six.exec_(compile(_make_raiser(lineno, funcname), filename, 'exec'), d)
+    exec(compile(_make_raiser(lineno, funcname), filename, 'exec'), d)
     ret = d[funcname]
     return ret
 
